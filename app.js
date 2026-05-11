@@ -1530,3 +1530,8 @@ function renderImprenta(){
     </div>
   </div>`;
 }
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",loadData);
+}else{
+  loadData();
+}
