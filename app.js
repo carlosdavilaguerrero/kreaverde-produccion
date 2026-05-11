@@ -348,7 +348,7 @@ function renderPage(){
     case 'admin':            return (state.user.role==='admin'||state.user.role==='producer')?renderAdmin():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'audit':            return state.user.role==='admin'?renderAudit():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'exportar':         return renderExportar();
-    case 'imprenta':         return state.user.role==='admin'?renderImprenta():'<div class="content"><div class="empty">Acceso restringido — solo administradores</div></div>';
+    case 'imprenta':         return renderImprenta();
     case 'admin-dashboard':  return state.user.role==='admin'?renderAdminDashboard():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     default:                 return renderDashboard();
   }
@@ -1389,6 +1389,62 @@ function renderImprenta(){
   const hojaTotal=hojaBase+extras;
   const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
   const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
+  const hasOrden=imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta;
+
+  // Vista de solo lectura para productores y operadores
+  if(state.user.role!=='admin'){
+    return `
+    <div class="ph">
+      <div class="ph-title">🖨 Orden de Imprenta</div>
+      <div class="ph-sub">Vista de la orden actual</div>
+    </div>
+    <div class="content">
+      ${hasOrden?`
+      <div style="background:#fff;border:2px solid #0f1923;border-radius:12px;padding:24px;max-width:480px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #0f1923">
+          <div style="font-family:var(--rajd);font-size:20px;font-weight:700;letter-spacing:2px;color:#00923d">◈ KREAVERDE</div>
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#7a8fa8;text-align:right">ORDEN DE IMPRENTA<br><span style="color:#0f1923;font-size:12px">${new Date().toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'})}</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cliente</span>
+            <span style="font-size:16px;font-weight:700;color:#0f1923">${escHTML(imp.cliente.toUpperCase())}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Producto</span>
+            <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(imp.producto)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cantidad</span>
+            <span style="font-size:15px;font-weight:700;color:#0f1923">${cant.toLocaleString()} uds</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Material</span>
+            <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(matLabel)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Tipo</span>
+            <span style="font-size:15px;font-weight:700;color:${imp.tipo==='nueva'?'#00923d':'#1a5fd4'}">${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:2px solid #0f1923">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Hojas a enviar</span>
+            <span style="font-size:28px;font-weight:700;font-family:var(--mono);color:#0f1923">${hojaTotal.toLocaleString()}</span>
+          </div>
+          ${troq?.note?`<div style="font-size:11px;color:#7a8fa8;font-style:italic;padding:4px 0">Nota troquel: ${escHTML(troq.note)}</div>`:''}
+          ${extras>0?`<div style="font-size:11px;color:#1a5fd4;padding:4px 0">Base: ${hojaBase.toLocaleString()} + ${extras.toLocaleString()} hojas extra</div>`:''}
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0">
+            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Imprenta</span>
+            <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(impLabel.toUpperCase())}</span>
+          </div>
+        </div>
+      </div>`
+      :`<div class="empty" style="padding:60px 20px">
+        <div style="font-size:40px;margin-bottom:12px">🖨</div>
+        <div style="font-size:14px;color:var(--txt2)">No hay orden de imprenta activa</div>
+        <div style="font-size:12px;color:var(--txt3);margin-top:6px">El administrador debe crear una orden</div>
+      </div>`}
+    </div>`;
+  }
 
   const preview=imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta?`
   <div style="margin-top:24px">
