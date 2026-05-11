@@ -1,0 +1,1532 @@
+
+/* ══════════════════════════════════════
+   CONFIG
+══════════════════════════════════════ */
+const MACHINES = [
+  { id:'tapas',   name:'Máquina de Tapas',   color:'#2979ff', products:['Tapas Grandes','Tapas Medianas','Tapas Pequeñas'] },
+  { id:'grande',  name:'Máquina Grande',      color:'#00923d', products:['Tarrinas 32oz','Tarrinas 24oz','Tarrinas 16oz','Tarrinas 12oz'] },
+  { id:'pequena', name:'Máquina Pequeña',     color:'#ffab00', products:['Tarrinas 10oz','Tarrinas 7oz','Tarrinas 5oz'] },
+  { id:'conica',  name:'Máquina Cónica',      color:'#ff6d00', products:['Vasos 4oz','Vasos 6oz','Vasos 8oz','Vasos 8oz Vending','Vasos 12oz','Vasos 16oz','Tarrinas 4oz'] },
+  { id:'troqueladora', name:'Troqueladora', color:'#9c27b0', products:['Tarrinas 4oz','Tarrinas 5oz','Tarrinas 7oz','Tarrinas 10oz','Tarrinas 12oz','Tarrinas 16oz','Tarrinas 24oz','Tarrinas 32oz','Vasos 4oz','Vasos 6oz','Vasos 8oz','Vasos 8oz Vending','Vasos 12oz','Vasos 16oz'] }
+];
+
+const STATUS = {
+  pendiente:    { label:'Pendiente',       color:'#64748b' },
+  en_proceso:   { label:'En Proceso',      color:'#00e676' },
+  cambio_molde: { label:'Cambio de Molde', color:'#ffab00' },
+  pausada:      { label:'Pausada',         color:'#ff6d00' },
+  completada:   { label:'Completada',      color:'#2979ff' },
+  cancelada:    { label:'Cancelada',       color:'#ef4444' }
+};
+
+const SHIFTS = [
+  {id:'mañana',label:'Mañana (06:00 – 14:00)'},
+  {id:'tarde', label:'Tarde  (14:00 – 22:00)'},
+  {id:'noche', label:'Noche  (22:00 – 06:00)'}
+];
+
+const DAMAGE_TYPES = ['Deformación','Color irregular','Rebaba excesiva','Fuga de material','Rotura de molde','Problema de sellado','Dimensión fuera de especificación','Otro'];
+
+const TROQUELES = {
+  'Tarrinas 32oz': { units:4,  note:'+ 2 uds de 5oz por hoja' },
+  'Tarrinas 24oz': { units:6,  note:'' },
+  'Tarrinas 16oz': { units:8,  note:'' },
+  'Tarrinas 12oz': { units:10, note:'' },
+  'Tarrinas 10oz': { units:8,  note:'+ 2 uds de 5oz por hoja' },
+  'Tarrinas 7oz':  { units:10, note:'' },
+  'Tarrinas 5oz':  { units:12, note:'' },
+  'Tarrinas 4oz':  { units:18, note:'' },
+  'Vasos 16oz':    { units:6,  note:'' },
+  'Vasos 12oz':    { units:6,  note:'' },
+  'Vasos 8oz':     { units:12, note:'' },
+  'Vasos 8oz Vending':{ units:12, note:'' },
+  'Vasos 6oz':     { units:12, note:'' },
+  'Vasos 4oz':     { units:20, note:'' },
+  'Vasos 2oz':     { units:20, note:'' },
+};
+
+const MATERIALES = ['230g Mate 72×50','230g Mate 58×50','280g Mate 72×50','Otro'];
+const IMPRENTAS  = ['Gráficas Astudillo','Grafinsa','Imprenta Harrys','Otra'];
+
+const PRODUCTOS_IMPRENTA = [
+  'Tarrinas 32oz','Tarrinas 24oz','Tarrinas 16oz','Tarrinas 12oz',
+  'Tarrinas 10oz','Tarrinas 7oz','Tarrinas 5oz','Tarrinas 4oz',
+  'Vasos 16oz','Vasos 12oz','Vasos 8oz','Vasos 8oz Vending',
+  'Vasos 6oz','Vasos 4oz','Vasos 2oz'
+];
+
+const ADMIN_USER = {id:'usr_carlos',username:'carlos',password:'1808',name:'Carlos Dávila',role:'admin',status:'approved',created_at:new Date().toISOString()};
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let state = {
+  page: 'login',
+  user: null,
+  users: [],
+  productions: [],
+  selectedProdId: null,
+  authPage: 'login',
+  tab: 'info',
+  filters: {machine:'',status:'',shift:'',q:''},
+  imp: { cliente:'', producto:'', cantidad:'', material:'', materialOtro:'', tipo:'nueva', extrasOn:false, extras:0, imprenta:'', imprentaOtra:'' }
+};
+
+/* ══════════════════════════════════════
+   SUPABASE
+══════════════════════════════════════ */
+const SB_URL = 'https://qnbobqlqldwcidadgbkh.supabase.co';
+const SB_KEY = 'sb_publishable_DJKuLqz6CqdFFlKr7070Ng_Ij4U9yio';
+const SB_H   = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
+
+let _cachedProds = [];
+
+async function sbFetch(table, qs=''){
+  const r = await fetch(`${SB_URL}/rest/v1/${table}?select=*${qs}`,{headers:SB_H});
+  return r.ok ? r.json() : [];
+}
+async function sbUpsert(table, data){
+  await fetch(`${SB_URL}/rest/v1/${table}`,{
+    method:'POST',
+    headers:{...SB_H,'Prefer':'resolution=merge-duplicates,return=minimal'},
+    body:JSON.stringify(Array.isArray(data)?data:[data])
+  }).catch(()=>{});
+}
+
+/* STORAGE — guarda local + sincroniza a Supabase */
+const DB = {
+  get(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch{return null;} },
+  set(k,v){
+    try{ localStorage.setItem(k,JSON.stringify(v)); }catch{}
+    if(k==='kv_users') sbUpsert('kv_users', v);
+    if(k==='kv_productions'){
+      const changed=v.filter(p=>{ const o=_cachedProds.find(x=>x.id===p.id); return !o||JSON.stringify(o)!==JSON.stringify(p); });
+      if(changed.length) sbUpsert('kv_productions', changed);
+      _cachedProds=[...v];
+    }
+  }
+};
+
+async function loadData(){
+  document.getElementById('app').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:14px;background:#edf0f5">
+      <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#00923d;letter-spacing:2px">◈ KREAVERDE</div>
+      <div style="font-size:13px;color:#7a8fa8">Conectando con la base de datos…</div>
+    </div>`;
+  try{
+    const [sbUsers, sbProds] = await Promise.all([
+      sbFetch('kv_users'),
+      sbFetch('kv_productions','&order=created_at.asc')
+    ]);
+    if(Array.isArray(sbUsers)&&sbUsers.length>0){
+      state.users=sbUsers; DB.get('kv_users'); localStorage.setItem('kv_users',JSON.stringify(sbUsers));
+    } else {
+      state.users=[ADMIN_USER]; sbUpsert('kv_users',[ADMIN_USER]);
+    }
+    state.productions=Array.isArray(sbProds)?sbProds:[];
+    _cachedProds=[...state.productions];
+    localStorage.setItem('kv_productions',JSON.stringify(state.productions));
+  } catch(e){
+    // Fallback a localStorage si no hay conexión
+    let users=DB.get('kv_users');
+    if(!users||!users.length){ users=[ADMIN_USER]; }
+    state.users=users;
+    state.productions=DB.get('kv_productions')||[];
+    _cachedProds=[...state.productions];
+    notify('error','Sin conexión — usando datos locales');
+  }
+  render();
+}
+
+/* ══════════════════════════════════════
+   UTILS
+══════════════════════════════════════ */
+const uid    = ()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const now    = ()=>new Date().toISOString();
+const fmt    = iso=>iso?new Date(iso).toLocaleString('es-EC',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+const usd    = n=>'$'+(+n||0).toFixed(2);
+const pct    = (a,b)=>b>0?Math.min(100,Math.round(a/b*100)):0;
+const durMin = (a,b)=>a&&b?Math.round((new Date(b)-new Date(a))/60000):null;
+const mach   = id=>MACHINES.find(m=>m.id===id);
+const uname  = id=>(state.users.find(u=>u.id===id)||{name:id}).name;
+const escHTML = s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const statusBadge = s=>{ const st=STATUS[s]||{label:s,color:'#64748b'}; return `<span class="badge" style="color:${st.color};background:${st.color}1a">${escHTML(st.label)}</span>`; };
+const machColor = id=>{ const m=MACHINES.find(x=>x.id===id); return m?m.color:'var(--txt2)'; };
+const machName  = id=>{ const m=MACHINES.find(x=>x.id===id); return m?m.name:id; };
+
+/* ══════════════════════════════════════
+   NOTIFY
+══════════════════════════════════════ */
+function notify(type,msg){
+  const el=document.getElementById('notif');
+  el.innerHTML=`<div class="notif notif-${escHTML(type)}">${escHTML(msg)}</div>`;
+  setTimeout(()=>el.innerHTML='',3200);
+}
+
+/* ══════════════════════════════════════
+   RENDER ENGINE
+══════════════════════════════════════ */
+function renderMobileTopbar(){
+  const u=state.user;
+  return `<div style="background:#1a2535;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;position:sticky;top:0;z-index:200;border-bottom:1px solid #253548">
+    <div style="font-family:var(--rajd);font-size:17px;font-weight:700;letter-spacing:2px;color:#00e676">◈ KREAVERDE</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-family:var(--rajd);font-size:12px;color:#8fa8c2">${escHTML(u.name.split(' ')[0])}</span>
+      <button id="mob-logout" style="background:rgba(255,61,61,.12);border:1px solid rgba(255,61,61,.3);color:#ff7070;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--rajd);padding:5px 10px">↩</button>
+    </div>
+  </div>`;
+}
+
+function renderBottomNav(){
+  const u=state.user;
+  const items=[
+    {id:'dashboard',label:'Dashboard',icon:'◉'},
+    {id:'productions',label:'Órdenes',icon:'☰'},
+    ...(u.role!=='operator'?[{id:'new-production',label:'Nueva',icon:'+'}]:[]),
+    ...(u.role==='admin'||u.role==='producer'?[{id:'admin',label:'Usuarios',icon:'◈'}]:[]),
+    ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
+    {id:'exportar',label:'Datos',icon:'⇅'},
+    ...(u.role==='admin'||u.role==='producer'?[{id:'imprenta',label:'Imprenta',icon:'🖨'}]:[])
+  ];
+  return `<div class="bottom-nav">${items.map(it=>`
+    <div class="bn-item${state.page===it.id?' active':''}" data-page="${it.id}">
+      <span class="bn-icon">${it.icon}</span>
+      <span class="bn-lbl">${escHTML(it.label)}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(!state.user){ app.innerHTML=renderAuth(); bindAuth(); return; }
+  if(state.user.status==='pending'){ app.innerHTML=renderPending(); bindPending(); return; }
+  const isMobile=window.innerWidth<=768;
+  app.innerHTML=`
+    <div class="app">
+      ${!isMobile?renderSidebar():''}
+      <div class="main">
+        ${isMobile?renderMobileTopbar():''}
+        ${renderPage()}
+      </div>
+    </div>
+    ${isMobile?renderBottomNav():''}`;
+  bindAll();
+  if(isMobile){
+    document.getElementById('mob-logout')?.addEventListener('click',()=>{ state.user=null; state.authPage='login'; render(); });
+  }
+}
+
+/* ══════════════════════════════════════
+   AUTH
+══════════════════════════════════════ */
+function renderAuth(){
+  if(state.authPage==='register') return renderRegister();
+  return `
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo">◈ KREAVERDE <small>SISTEMA DE PRODUCCIÓN</small></div>
+      <div class="auth-title">Iniciar Sesión</div>
+      <div class="auth-sub">Acceso para personal autorizado</div>
+      <div class="fg">
+        <div class="field"><label>Usuario</label><input id="li-u" placeholder="tu.usuario" autocomplete="username"/></div>
+        <div class="field"><label>Contraseña</label><input id="li-p" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+        <div id="li-err" class="err"></div>
+        <button class="btn btn-primary" id="li-btn" style="justify-content:center;padding:12px">Ingresar</button>
+        <div style="text-align:center;font-size:12px;color:var(--txt2)">¿Sin cuenta? <span id="go-reg" style="color:var(--green);cursor:pointer">Solicitar acceso</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderRegister(){
+  return `
+  <div class="auth-wrap">
+    <div class="auth-box">
+      <div class="auth-logo">◈ KREAVERDE <small>SISTEMA DE PRODUCCIÓN</small></div>
+      <div class="auth-title">Solicitar Acceso</div>
+      <div class="auth-sub">El administrador aprobará tu cuenta</div>
+      <div class="fg" style="margin-top:20px">
+        <div class="field"><label>Nombre completo</label><input id="rg-n" placeholder="Tu nombre completo"/></div>
+        <div class="field"><label>Usuario</label><input id="rg-u" placeholder="nombre.apellido"/></div>
+        <div class="field"><label>Contraseña</label><input id="rg-p" type="password"/></div>
+        <div id="rg-err" class="err"></div>
+        <button class="btn btn-primary" id="rg-btn" style="justify-content:center;padding:12px">Enviar Solicitud</button>
+        <div style="text-align:center;font-size:12px"><span id="go-login" style="color:var(--green);cursor:pointer">← Volver al login</span></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindAuth(){
+  document.getElementById('go-reg')?.addEventListener('click',()=>{ state.authPage='register'; render(); });
+  document.getElementById('go-login')?.addEventListener('click',()=>{ state.authPage='login'; render(); });
+
+  document.getElementById('li-btn')?.addEventListener('click',()=>{
+    const u=document.getElementById('li-u').value.trim();
+    const p=document.getElementById('li-p').value;
+    const found=state.users.find(x=>x.username===u&&x.password===p);
+    const err=document.getElementById('li-err');
+    if(!found){ err.textContent='Usuario o contraseña incorrectos'; return; }
+    if(found.status==='rejected'){ err.textContent='Cuenta rechazada. Contacta al administrador.'; return; }
+    state.user=found; state.page='dashboard'; render();
+  });
+  document.getElementById('li-p')?.addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('li-btn').click(); });
+
+  document.getElementById('rg-btn')?.addEventListener('click',()=>{
+    const n=document.getElementById('rg-n').value.trim();
+    const u=document.getElementById('rg-u').value.trim();
+    const p=document.getElementById('rg-p').value;
+    const err=document.getElementById('rg-err');
+    if(!n||!u||!p){ err.textContent='Completa todos los campos'; return; }
+    if(state.users.find(x=>x.username===u)){ err.textContent='Ese nombre de usuario ya existe'; return; }
+    const nu={id:'usr_'+uid(),username:u,password:p,name:n,role:'operator',status:'pending',created_at:now()};
+    state.users.push(nu); DB.set('kv_users',state.users);
+    state.user=nu; render();
+  });
+}
+
+function renderPending(){
+  return `
+  <div class="pending-wrap">
+    <div class="auth-box" style="text-align:center">
+      <div class="auth-logo">◈ KREAVERDE <small>SISTEMA DE PRODUCCIÓN</small></div>
+      <div style="font-size:50px;margin:16px 0">⏳</div>
+      <div class="auth-title">Cuenta Pendiente</div>
+      <p style="color:var(--txt2);font-size:13px;margin:12px 0 26px;line-height:1.7">Hola <strong style="color:var(--txt)">${escHTML(state.user.name)}</strong>, tu solicitud está en revisión. El administrador debe aprobar tu acceso.</p>
+      <button class="btn btn-secondary" id="pend-logout" style="width:100%;justify-content:center">Cerrar Sesión</button>
+    </div>
+  </div>`;
+}
+function bindPending(){ document.getElementById('pend-logout')?.addEventListener('click',()=>{ state.user=null; state.authPage='login'; render(); }); }
+
+/* ══════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════ */
+function renderSidebar(){
+  const u=state.user;
+  const nav=[
+    {id:'dashboard',       label:'Dashboard',    icon:'◉'},
+    {id:'productions',     label:'Producciones', icon:'☰'},
+    ...(u.role!=='operator'?[{id:'new-production',label:'Nueva Prod.',icon:'+'}]:[]),
+    ...(u.role==='admin'||u.role==='producer'?[{id:'admin',label:'Usuarios',icon:'◈'}]:[]),
+    ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
+    {id:'exportar',label:'Exportar/Importar',icon:'⇅'},
+    ...(u.role==='admin'||u.role==='producer'?[{id:'imprenta',label:'Orden Imprenta',icon:'🖨'}]:[])
+  ];
+  const roleColor=u.role==='admin'?'var(--red)':u.role==='producer'?'var(--amber)':'var(--blue)';
+  return `
+  <div class="sidebar">
+    <div style="padding:22px 20px 16px;border-bottom:1px solid #253548;font-family:var(--rajd);font-size:19px;font-weight:700;letter-spacing:2px;color:#00e676;line-height:1.1">
+      ◈ KREAVERDE<small style="color:#7a8fa8;font-weight:400;font-size:10px;display:block;letter-spacing:3px;margin-top:3px">PRODUCCIÓN</small>
+    </div>
+    <nav style="flex:1;padding:10px 0;border-top:1px solid #253548">
+      ${nav.map(n=>`<div class="sb-item${state.page===n.id?' active':''}" data-page="${n.id}">
+        <span style="font-size:16px;width:22px;text-align:center;flex-shrink:0">${n.icon}</span>
+        <span>${escHTML(n.label)}</span>
+      </div>`).join('')}
+    </nav>
+    <div style="padding:16px;border-top:1px solid #253548">
+      <div style="font-family:var(--rajd);font-size:15px;font-weight:600;color:#dde8f5">${escHTML(u.name)}</div>
+      <div style="display:inline-block;margin-top:5px;padding:2px 9px;border-radius:3px;font-size:10px;letter-spacing:1.5px;font-weight:700;background:${roleColor}1a;color:${roleColor}">${u.role.toUpperCase()}</div>
+      <button id="logout-btn" style="margin-top:11px;width:100%;padding:8px;background:rgba(255,61,61,.12);border:1px solid rgba(255,61,61,.3);color:#ff7070;border-radius:5px;cursor:pointer;font-size:12px;font-family:var(--rajd);letter-spacing:.5px">↩ Cerrar sesión</button>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   PAGE ROUTER
+══════════════════════════════════════ */
+function renderPage(){
+  switch(state.page){
+    case 'dashboard':        return renderDashboard();
+    case 'productions':      return renderProductions();
+    case 'new-production':   return renderNewProduction();
+    case 'production-detail':return renderProductionDetail();
+    case 'machine-queue':    return renderMachineQueue();
+    case 'admin':            return (state.user.role==='admin'||state.user.role==='producer')?renderAdmin():'<div class="content"><div class="empty">Acceso restringido</div></div>';
+    case 'audit':            return state.user.role==='admin'?renderAudit():'<div class="content"><div class="empty">Acceso restringido</div></div>';
+    case 'exportar':         return renderExportar();
+    case 'imprenta':         return renderImprenta();
+    default:                 return renderDashboard();
+  }
+}
+
+/* ══════════════════════════════════════
+   MACHINE QUEUE
+══════════════════════════════════════ */
+function renderMachineQueue(){
+  const m=MACHINES.find(x=>x.id===state.selectedMachineId);
+  if(!m) return `<div class="content"><div class="empty">Máquina no encontrada</div></div>`;
+
+  const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
+  const orders=state.productions
+    .filter(p=>p.machine_id===m.id && activeStatuses.includes(p.status))
+    .sort((a,b)=>{
+      const rank=s=>s==='en_proceso'?0:s==='cambio_molde'?1:s==='pausada'?2:3;
+      if(rank(a.status)!==rank(b.status)) return rank(a.status)-rank(b.status);
+      return new Date(a.created_at)-new Date(b.created_at);
+    });
+
+  if(!orders.length){
+    return `
+    <div class="ph">
+      <div class="row" style="gap:10px">
+        <button class="btn btn-secondary btn-sm" data-page="dashboard">← Volver</button>
+        <div style="font-family:var(--rajd);font-size:22px;font-weight:700">${escHTML(m.name)}</div>
+      </div>
+    </div>
+    <div class="content"><div class="empty">Sin órdenes pendientes en esta máquina</div></div>`;
+  }
+
+  const currentProd=orders[0].product;
+  let lastProduct=null;
+  let moldeCount=0;
+
+  const cards=orders.map((p,i)=>{
+    const st=STATUS[p.status]||{label:p.status,color:'#64748b'};
+    const perc=pct(p.produced_qty||0,p.target_qty||1);
+    const isFirst=i===0;
+    const isSameMolde=p.product===currentProd;
+    const needsMoldChange=!isFirst && p.product!==currentProd;
+    const isNewProduct=p.product!==lastProduct;
+    lastProduct=p.product;
+
+    // Separador de cambio de molde
+    const separator=(!isFirst && isNewProduct && needsMoldChange)?`
+      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 10px">
+        <div style="flex:1;height:2px;background:#fde68a;border-radius:1px"></div>
+        <div style="background:#fff3cd;border:1px solid #fde68a;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#b86e00;font-family:var(--rajd);letter-spacing:.5px;white-space:nowrap">🔧 CAMBIO DE MOLDE</div>
+        <div style="flex:1;height:2px;background:#fde68a;border-radius:1px"></div>
+      </div>`
+    :(!isFirst && isNewProduct && isSameMolde)?`
+      <div style="display:flex;align-items:center;gap:10px;margin:10px 0 6px">
+        <div style="flex:1;height:1px;background:#d1fae5"></div>
+        <div style="font-size:10px;color:#00923d;font-weight:700;font-family:var(--rajd)">MISMO MOLDE</div>
+        <div style="flex:1;height:1px;background:#d1fae5"></div>
+      </div>`:'';
+
+    const borderColor=isFirst?(p.status==='en_proceso'?m.color:'#64748b'):isSameMolde?'#d1fae5':'#fde68a';
+    const bgColor=isFirst?'#ffffff':isSameMolde?'#f7fffe':'#fffdf5';
+
+    const stIcon=p.status==='en_proceso'?'▶':p.status==='cambio_molde'?'🔧':p.status==='pausada'?'⏸':'⏳';
+
+    return `${separator}
+    <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:14px;overflow:hidden;cursor:pointer;${isFirst&&p.status==='en_proceso'?'box-shadow:0 4px 20px '+m.color+'33':''}" data-open-prod="${p.id}">
+      <!-- Número y estado -->
+      <div style="display:flex;align-items:center;gap:0;padding:12px 14px;border-bottom:1px solid ${borderColor}">
+        <div style="width:36px;height:36px;border-radius:50%;background:${isFirst?m.color:isSameMolde?'#e8f5ee':'#fff3cd'};display:flex;align-items:center;justify-content:center;font-size:${isFirst?'18':'15'}px;font-weight:700;color:${isFirst?'#fff':isSameMolde?'#00923d':'#b86e00'};flex-shrink:0;margin-right:12px">
+          ${isFirst?stIcon:(i+1)}
+        </div>
+        <div style="flex:1">
+          <div style="font-family:var(--rajd);font-size:${isFirst?'20':'16'}px;font-weight:700;color:#0f1923;line-height:1.1">${escHTML(p.product)}</div>
+          <div style="font-size:11px;color:#7a8fa8;margin-top:3px">
+            ${p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700">${escHTML(p.marca||'PERS')}</span> · `:''}
+            Turno ${escHTML(p.shift)} · ${escHTML(st.label)}
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:${isFirst?'24':'18'}px;font-weight:700;font-family:var(--mono);color:#0f1923;line-height:1">${(p.produced_qty||0).toLocaleString()}</div>
+          <div style="font-size:10px;color:#92a6bf">/ ${(p.target_qty||0).toLocaleString()}</div>
+        </div>
+      </div>
+      <!-- Barra progreso -->
+      <div style="padding:10px 14px">
+        <div style="height:${isFirst?'10':'6'}px;background:#edf0f5;border-radius:5px;overflow:hidden;margin-bottom:5px">
+          <div style="width:${perc}%;height:100%;background:${isFirst?m.color:isSameMolde?'#00923d':'#ffab00'};border-radius:5px;transition:width .5s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <span style="font-size:12px;font-weight:700;color:${isFirst?m.color:'#7a8fa8'}">${perc}% completado</span>
+          ${p.damages?.length?`<span style="font-size:11px;color:#cc1f1f">⚠ ${p.damages.length} daño${p.damages.length>1?'s':''}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="ph">
+    <div class="row" style="gap:10px;align-items:center">
+      <button class="btn btn-secondary btn-sm" data-page="dashboard" style="padding:7px 12px;flex-shrink:0">← Volver</button>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:12px;height:12px;border-radius:50%;background:${m.color};flex-shrink:0"></div>
+          <div style="font-family:var(--rajd);font-size:20px;font-weight:700">${escHTML(m.name)}</div>
+        </div>
+        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${orders.length} orden${orders.length!==1?'es':''} en cola</div>
+      </div>
+    </div>
+  </div>
+  <div class="content">
+    ${cards}
+    <div style="height:20px"></div>
+  </div>`;
+}
+
+function renderExportar(){
+  return `
+  <div class="ph">
+    <div class="ph-title">Exportar / Importar</div>
+    <div class="ph-sub">Mueve tus datos entre dispositivos o haz una copia de seguridad</div>
+  </div>
+  <div class="content">
+    <div class="card" style="max-width:600px;margin-bottom:20px">
+      <div class="st">⬆ Exportar Datos</div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.7">Copia todo el contenido (usuarios, producciones) al portapapeles para guardarlo o importarlo en otro navegador/dispositivo.</p>
+      <button class="btn btn-primary" id="exp-btn">⬆ Exportar al portapapeles</button>
+      <div id="exp-ok" style="display:none;margin-top:10px;color:var(--green);font-family:var(--rajd);font-size:13px">✓ Datos copiados. Pégalos en el campo de importación del otro dispositivo.</div>
+    </div>
+    <div class="card" style="max-width:600px">
+      <div class="st">⬇ Importar Datos</div>
+      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.7">Pega aquí el texto exportado. <strong style="color:var(--red)">Esto reemplazará todos los datos actuales.</strong></p>
+      <div class="field" style="margin-bottom:14px"><label>Pega aquí el texto copiado</label>
+        <textarea id="imp-text" style="min-height:120px;font-family:var(--mono);font-size:11px" placeholder='{"users":[...],"productions":[...]}'></textarea>
+      </div>
+      <div id="imp-err" class="err" style="margin-bottom:10px"></div>
+      <button class="btn btn-warn" id="imp-btn">⬇ Importar datos</button>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════ */
+function renderDashboard(){
+  const today=new Date().toDateString();
+  const todayP=state.productions.filter(p=>new Date(p.created_at).toDateString()===today);
+  const totalDmg=state.productions.reduce((s,p)=>s+(p.damages?.length||0),0);
+  const todayVal=todayP.reduce((s,p)=>s+((p.produced_qty||0)*(p.unit_price||0)),0);
+  const activeMach=new Set(state.productions.filter(p=>p.status==='en_proceso').map(p=>p.machine_id)).size;
+  const dateStr=new Date().toLocaleDateString('es-EC',{weekday:'long',day:'numeric',month:'long'});
+
+  const machCards=MACHINES.map(m=>{
+    // Todas las órdenes activas de esta máquina (no completadas, no canceladas)
+    const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
+    const allOrders=state.productions
+      .filter(p=>p.machine_id===m.id && activeStatuses.includes(p.status))
+      .sort((a,b)=>{
+        // Prioridad: en_proceso/cambio_molde primero, luego pausada, luego pendiente
+        const rank=s=>s==='en_proceso'?0:s==='cambio_molde'?1:s==='pausada'?2:3;
+        if(rank(a.status)!==rank(b.status)) return rank(a.status)-rank(b.status);
+        return new Date(a.created_at)-new Date(b.created_at);
+      });
+
+    const cur=allOrders[0];
+    if(!cur){
+      return `<div style="background:#fff;border-radius:14px;border:1px solid #dde3ec;overflow:hidden;margin-bottom:14px">
+        <div style="display:flex;align-items:stretch">
+          <div style="width:6px;flex-shrink:0;background:${m.color}"></div>
+          <div style="flex:1;padding:16px">
+            <div style="font-family:var(--rajd);font-size:16px;font-weight:700;color:#0f1923">${escHTML(m.name)}</div>
+            <div style="font-size:13px;color:#c5cfde;margin-top:5px;font-style:italic">Sin órdenes pendientes</div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    const curProd=cur.product;
+    // Órdenes del mismo producto (sin contar la actual) = sin cambio de molde
+    const sameProduct=allOrders.slice(1).filter(p=>p.product===curProd);
+    // Órdenes de otros productos = requieren cambio de molde
+    const otherProduct=allOrders.slice(1).filter(p=>p.product!==curProd);
+
+    const perc=pct(cur.produced_qty||0,cur.target_qty||1);
+    const st=STATUS[cur.status]||{label:cur.status,color:'#64748b'};
+    const isActive=cur.status==='en_proceso';
+    const hasDmg=cur.damages?.length>0;
+
+    // Status icon
+    const stIcon=cur.status==='en_proceso'?'▶':cur.status==='cambio_molde'?'🔧':cur.status==='pausada'?'⏸':'⏳';
+
+    // Tipo badge
+    const tipoBadge=cur.tipo==='personalizado'
+      ?`<span style="background:#fff3cd;color:#b86e00;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">${escHTML(cur.marca||'PERS')}</span>`
+      :`<span style="background:#f0f3f7;color:#7a8fa8;padding:2px 8px;border-radius:4px;font-size:11px">Blanco</span>`;
+
+    // Cola siguiente — mismo producto
+    const sameRows=sameProduct.map((p,i)=>{
+      const pp=pct(p.produced_qty||0,p.target_qty||1);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #edf0f5;cursor:pointer" data-open-prod="${p.id}">
+        <div style="width:28px;height:28px;border-radius:50%;background:#e8f5ee;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#00923d;flex-shrink:0">${i+2}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#0f1923">${escHTML(p.product)}</div>
+          <div style="font-size:11px;color:#7a8fa8">Objetivo: ${(p.target_qty||0).toLocaleString()}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:11px;font-weight:700;color:#00923d">✓ Sin cambio</div>
+          <div style="font-size:10px;color:#92a6bf">de molde</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Cola después — distinto producto
+    const otherRows=otherProduct.map((p,i)=>{
+      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #edf0f5;cursor:pointer;background:#fffbf5" data-open-prod="${p.id}">
+        <div style="width:28px;height:28px;border-radius:50%;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#b86e00;flex-shrink:0">${sameProduct.length+i+2}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:#0f1923">${escHTML(p.product)}</div>
+          <div style="font-size:11px;color:#7a8fa8">Objetivo: ${(p.target_qty||0).toLocaleString()}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:11px;font-weight:700;color:#b86e00">⚠ Cambio</div>
+          <div style="font-size:10px;color:#92a6bf">de molde</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const separatorSame=sameProduct.length?`
+      <div style="padding:6px 14px;background:#e8f5ee;display:flex;align-items:center;gap:6px">
+        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#00923d;font-family:var(--rajd)">A CONTINUACIÓN — MISMO MOLDE</span>
+      </div>${sameRows}`:'';
+
+    const separatorOther=otherProduct.length?`
+      <div style="padding:6px 14px;background:#fff3cd;display:flex;align-items:center;gap:6px">
+        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#b86e00;font-family:var(--rajd)">DESPUÉS — REQUIERE CAMBIO DE MOLDE</span>
+      </div>${otherRows}`:'';
+
+    return `<div style="background:#fff;border-radius:14px;border:2px solid ${isActive?m.color:'#dde3ec'};overflow:hidden;margin-bottom:14px;${isActive?'box-shadow:0 4px 20px '+m.color+'33':''}">
+      <!-- Encabezado máquina — clic abre cola completa -->
+      <div style="display:flex;align-items:center;gap:0;background:${isActive?m.color+'14':'#f8fafc'};border-bottom:1px solid ${isActive?m.color+'33':'#edf0f5'};cursor:pointer" data-open-machine="${m.id}">
+        <div style="width:6px;flex-shrink:0;background:${m.color};align-self:stretch"></div>
+        <div style="flex:1;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-family:var(--rajd);font-size:15px;font-weight:700;color:#0f1923;display:flex;align-items:center;gap:7px">
+              ${escHTML(m.name)}
+              ${isActive?`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00923d;animation:kvpulse 2s infinite"></span>`:''}
+            </div>
+            <div style="font-size:11px;color:#7a8fa8;margin-top:2px">${allOrders.length} orden${allOrders.length!==1?'es':''} en cola · <span style="color:${m.color};font-weight:700">Ver todas →</span></div>
+          </div>
+          <span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--rajd);color:${st.color};background:${st.color}18">${stIcon} ${escHTML(st.label)}</span>
+        </div>
+      </div>
+      <!-- Orden actual -->
+      <div style="padding:14px;cursor:pointer" data-open-prod="${cur.id}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:18px;font-weight:700;color:#0f1923;line-height:1.2">${escHTML(curProd)}</div>
+            <div style="margin-top:5px">${tipoBadge}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:26px;font-weight:700;font-family:var(--mono);color:#0f1923;line-height:1">${(cur.produced_qty||0).toLocaleString()}</div>
+            <div style="font-size:11px;color:#92a6bf">de ${(cur.target_qty||0).toLocaleString()}</div>
+          </div>
+        </div>
+        <div style="height:8px;background:#edf0f5;border-radius:4px;overflow:hidden;margin-bottom:6px">
+          <div style="width:${perc}%;height:100%;background:${m.color};border-radius:4px;transition:width .5s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:700;color:${m.color}">${perc}% completado</span>
+          ${hasDmg?`<span style="font-size:12px;color:#cc1f1f;font-weight:600">⚠ ${cur.damages.length} daño${cur.damages.length>1?'s':''}</span>`:''}
+        </div>
+      </div>
+      <!-- Cola -->
+      ${separatorSame}
+      ${separatorOther}
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="ph">
+    <div class="ph-title">Dashboard de Producción</div>
+    <div class="ph-sub" style="text-transform:capitalize">${escHTML(dateStr)}</div>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
+        <div style="font-family:var(--mono);font-size:26px;color:#00923d">${activeMach}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Máquinas Activas</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
+        <div style="font-family:var(--mono);font-size:26px;color:#1a5fd4">${todayP.length}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Órdenes Hoy</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
+        <div style="font-family:var(--mono);font-size:26px;color:${totalDmg>0?'#cc1f1f':'#00923d'}">${totalDmg}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Daños</div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:14px;font-family:var(--rajd)">Cola de Producción por Máquina</div>
+    ${machCards}
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   PRODUCTIONS LIST
+══════════════════════════════════════ */
+function renderProductions(){
+  const {machine:fMach,status:fStat,shift:fShift,q}=state.filters;
+  const list=state.productions.filter(p=>{
+    if(fMach&&p.machine_id!==fMach)return false;
+    if(fStat&&p.status!==fStat)return false;
+    if(fShift&&p.shift!==fShift)return false;
+    if(q&&!p.product.toLowerCase().includes(q.toLowerCase()))return false;
+    return true;
+  }).slice().reverse();
+
+  const rows=list.length?list.map(p=>`
+    <tr class="clickable" data-open-prod="${p.id}">
+      <td style="color:${machColor(p.machine_id)};font-size:11px;font-weight:700">${escHTML(machName(p.machine_id))}</td>
+      <td style="font-weight:600">${escHTML(p.product)}</td>
+      <td>${statusBadge(p.status)}</td>
+      <td style="text-transform:capitalize;font-size:11px;color:var(--txt2)">${escHTML(p.shift)}</td>
+      <td class="mono" style="font-size:12px">${(p.target_qty||0).toLocaleString()}</td>
+      <td class="mono" style="font-size:12px">${(p.produced_qty||0).toLocaleString()}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:50px;height:3px;background:var(--raised);border-radius:2px;overflow:hidden"><div style="width:${pct(p.produced_qty||0,p.target_qty||1)}%;height:100%;background:var(--green);border-radius:2px"></div></div>
+          <span class="mono" style="font-size:10px;color:var(--txt2)">${pct(p.produced_qty||0,p.target_qty||1)}%</span>
+        </div>
+      </td>
+      <td style="color:${p.damages?.length>0?'var(--red)':'var(--txt3)'};font-size:12px">${p.damages?.length>0?`⚠ ${p.damages.length}`:'—'}</td>
+      <td style="font-size:11px;color:var(--txt2)">${escHTML(uname(p.created_by))}</td>
+      <td style="font-size:10px;color:var(--txt3)">${fmt(p.created_at)}</td>
+    </tr>`).join(''):`<tr><td colspan="11"><div class="empty">Sin producciones que coincidan</div></td></tr>`;
+
+  return `
+  <div class="ph">
+    <div class="ph-title">Producciones</div>
+    <div class="ph-sub">Historial completo — ${state.productions.length} registro${state.productions.length!==1?'s':''}</div>
+  </div>
+  <div class="content">
+    <div class="fb">
+      <input id="f-q" placeholder="Buscar producto..." value="${escHTML(q)}" style="min-width:140px"/>
+      <select id="f-mach">
+        <option value="">Todas las máquinas</option>
+        ${MACHINES.map(m=>`<option value="${m.id}"${fMach===m.id?' selected':''}>${escHTML(m.name)}</option>`).join('')}
+      </select>
+      <select id="f-stat">
+        <option value="">Todos los estados</option>
+        ${Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${fStat===k?' selected':''}>${escHTML(v.label)}</option>`).join('')}
+      </select>
+      <select id="f-shift">
+        <option value="">Todos los turnos</option>
+        ${SHIFTS.map(s=>`<option value="${s.id}"${fShift===s.id?' selected':''}>${escHTML(s.id.charAt(0).toUpperCase()+s.id.slice(1))}</option>`).join('')}
+      </select>
+      <span class="txt3" style="font-size:11px;margin-left:auto">${list.length} resultado${list.length!==1?'s':''}</span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tw"><table>
+        <thead><tr><th>Máquina</th><th>Producto</th><th>Tipo</th><th>Estado</th><th>Turno</th><th>Objetivo</th><th>Producido</th><th>Avance</th><th>Daños</th><th>Por</th><th>Fecha</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   NEW PRODUCTION
+══════════════════════════════════════ */
+function renderNewProduction(){
+  return `
+  <div class="ph">
+    <div class="ph-title">Nueva Producción</div>
+    <div class="ph-sub">Registrar nueva orden de fabricación</div>
+  </div>
+  <div class="content">
+    <div class="card" style="max-width:620px">
+      <div class="fg">
+        <div class="fr">
+          <div class="field"><label>Máquina *</label>
+            <select id="np-mach">
+              <option value="">Seleccionar máquina</option>
+              ${MACHINES.map(m=>`<option value="${m.id}">${escHTML(m.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label>Producto *</label>
+            <select id="np-prod"><option value="">Primero selecciona máquina</option></select>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>Turno</label>
+            <select id="np-shift">
+              ${SHIFTS.map(s=>`<option value="${s.id}">${escHTML(s.label)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field"><label>Cantidad Objetivo *</label>
+            <input id="np-qty" type="number" placeholder="ej: 5000"/>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>Tipo *</label>
+            <select id="np-tipo">
+              <option value="blanco">Blanco</option>
+              <option value="personalizado">Personalizado</option>
+            </select>
+          </div>
+          <div class="field" id="np-marca-wrap" style="display:none"><label>Nombre de Marca *</label>
+            <input id="np-marca" placeholder="ej: Mykonos, Zanzíbar..."/>
+          </div>
+        </div>
+        <div class="field"><label>Observaciones</label>
+          <textarea id="np-obs" placeholder="Instrucciones especiales, color, cliente..."></textarea>
+        </div>
+        <div id="np-err" class="err"></div>
+        <div class="row">
+          <button class="btn btn-primary" id="np-save">✓ Crear Producción</button>
+          <button class="btn btn-secondary" data-page="productions">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   PRODUCTION DETAIL
+══════════════════════════════════════ */
+function renderProductionDetail(){
+  const prod=state.productions.find(p=>p.id===state.selectedProdId);
+  if(!prod) return `<div class="content"><div class="empty">Producción no encontrada</div></div>`;
+  const m=MACHINES.find(x=>x.id===prod.machine_id);
+  const canEdit=['admin','producer','operator'].includes(state.user.role);
+  const canPrice=['admin','producer'].includes(state.user.role);
+  const value=(prod.produced_qty||0)*(prod.unit_price||0);
+  const totalMoldMin=(prod.mold_changes||[]).reduce((s,mc)=>s+(mc.duration_min||0),0);
+  const tab=state.tab||'info';
+
+  const tabInfo=tab==='info'?`
+    <div class="info-grid">
+      <div class="card fg">
+        <div class="st">Actualizar Producción</div>
+        <div class="field"><label>Estado</label>
+          <select id="det-status"${!canEdit?' disabled':''}>
+            ${Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${prod.status===k?' selected':''}>${escHTML(v.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field"><label>Cantidad Producida</label>
+            <input id="det-qty" type="number" value="${prod.produced_qty||0}"${!canEdit?' disabled':''}/>
+          </div>
+        <div class="field"><label>Observaciones</label>
+          <textarea id="det-obs"${!canEdit?' disabled':''}>${escHTML(prod.observations||'')}</textarea>
+        </div>
+        ${canEdit?`<button class="btn btn-primary" id="det-save">Guardar Cambios</button>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="card">
+          <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px">
+            <span class="lbl">Tipo:</span>
+            ${prod.tipo==='personalizado'?`<span style="color:var(--amber);font-family:var(--rajd);font-weight:700;font-size:13px">PERSONALIZADO</span><span style="color:var(--txt2);font-size:12px">· ${escHTML(prod.marca||'')}</span>`:`<span style="color:var(--txt2);font-family:var(--rajd);font-weight:700;font-size:13px">BLANCO</span>`}
+          </div>
+          <div style="margin-bottom:14px;padding:10px 14px;background:var(--raised);border-radius:6px;display:flex;align-items:center;gap:12px">
+            <span class="lbl">Tipo:</span>
+            ${prod.tipo==='personalizado'?'<span style="color:var(--amber);font-family:var(--rajd);font-weight:700;font-size:14px">PERSONALIZADO</span><span style="color:var(--txt2);font-size:13px;margin-left:6px">· '+escHTML(prod.marca||'')+'</span>':'<span style="color:var(--txt2);font-family:var(--rajd);font-weight:700;font-size:14px">BLANCO</span>'}
+          </div>
+          <div class="st">Métricas</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div><div class="mono" style="font-size:28px;color:var(--green)">${(prod.produced_qty||0).toLocaleString()}</div><div class="lbl">Producido</div></div>
+            <div><div class="mono" style="font-size:28px;color:var(--txt2)">${(prod.target_qty||0).toLocaleString()}</div><div class="lbl">Objetivo</div></div>
+            <div><div class="mono" style="font-size:28px;color:var(--blue)">${pct(prod.produced_qty||0,prod.target_qty||1)}%</div><div class="lbl">Avance</div></div>
+          </div>
+          <div class="pbar" style="margin-top:14px"><div class="pfill" style="width:${pct(prod.produced_qty||0,prod.target_qty||1)}%;background:${m?.color||'var(--green)'}"></div></div>
+        </div>
+        <div class="card">
+          <div class="st">Tiempos</div>
+          <div style="font-size:13px;display:flex;flex-direction:column;gap:10px">
+            <div class="row"><span class="txt2">Inicio:</span><div class="sp"></div><span class="mono" style="font-size:12px">${fmt(prod.start_time)}</span></div>
+            <div class="row"><span class="txt2">Fin:</span><div class="sp"></div><span class="mono" style="font-size:12px">${fmt(prod.end_time)}</span></div>
+            <div class="row"><span class="txt2">Tiempo en cambios de molde:</span><div class="sp"></div><span class="mono" style="color:var(--amber)">${totalMoldMin} min</span></div>
+          </div>
+        </div>
+      </div>
+    </div>`:'';
+
+  const dmgs=prod.damages||[];
+  const tabDmg=tab==='damages'?`
+    <div>
+      <div class="row" style="margin-bottom:16px">
+        <div class="st" style="margin:0">Daños Reportados</div>
+        ${canEdit?`<button class="btn btn-sm btn-danger" id="dmg-toggle">⚠ Reportar Daño</button>`:''}
+      </div>
+      <div id="dmg-form" style="display:none;margin-bottom:20px">
+        <div class="card fg" style="max-width:500px">
+          <div class="fr">
+            <div class="field"><label>Tipo de Daño</label>
+              <select id="dmg-type">${DAMAGE_TYPES.map(d=>`<option>${escHTML(d)}</option>`).join('')}</select>
+            </div>
+            <div class="field"><label>Piezas Dañadas</label><input id="dmg-qty" type="number" placeholder="0"/></div>
+          </div>
+          <div class="field"><label>Descripción</label><textarea id="dmg-desc" placeholder="Describe el problema..." style="min-height:60px"></textarea></div>
+          <div class="row">
+            <button class="btn btn-danger btn-sm" id="dmg-save">Registrar Daño</button>
+            <button class="btn btn-secondary btn-sm" id="dmg-cancel">Cancelar</button>
+          </div>
+        </div>
+      </div>
+      ${dmgs.length===0?`<div class="empty" style="color:var(--green)">✓ Sin daños reportados</div>`:
+      `<div class="card" style="padding:0;overflow:hidden">
+        <div class="tw"><table>
+          <thead><tr><th>Tipo</th><th>Piezas</th><th>Descripción</th><th>Reportado por</th><th>Fecha</th></tr></thead>
+          <tbody>${dmgs.map(d=>`<tr>
+            <td style="color:var(--red);font-weight:700">${escHTML(d.type)}</td>
+            <td class="mono">${(d.qty||0).toLocaleString()}</td>
+            <td style="color:var(--txt2)">${escHTML(d.description||'—')}</td>
+            <td style="color:var(--green);font-size:12px">${escHTML(d.reported_by_name||uname(d.reported_by))}</td>
+            <td style="color:var(--txt3);font-size:11px">${fmt(d.reported_at)}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--txt2)">
+          Total dañado: <span class="mono" style="color:var(--red)">${dmgs.reduce((s,d)=>s+(d.qty||0),0).toLocaleString()}</span> piezas
+        </div>
+      </div>`}
+    </div>`:'';
+
+  const mcs=prod.mold_changes||[];
+  const tabMolde=tab==='moldes'?`
+    <div>
+      <div class="st" style="margin-bottom:16px">Historial de Cambios de Molde</div>
+      ${mcs.length===0?`<div class="empty">Sin cambios de molde registrados</div>`:
+      `<div class="card" style="padding:0;overflow:hidden">
+        <div class="tw"><table>
+          <thead><tr><th>#</th><th>Inicio</th><th>Fin</th><th>Duración</th><th>Estado</th></tr></thead>
+          <tbody>${mcs.map((mc,i)=>`<tr>
+            <td class="mono txt3">${i+1}</td>
+            <td class="mono" style="font-size:12px">${fmt(mc.started_at)}</td>
+            <td class="mono" style="font-size:12px">${mc.ended_at?fmt(mc.ended_at):'—'}</td>
+            <td class="mono" style="color:var(--amber)">${mc.duration_min!=null?mc.duration_min+' min':'—'}</td>
+            <td>${mc.ended_at?`<span style="color:var(--green);font-size:12px">Completado</span>`:`<span class="pulse" style="color:var(--amber);font-size:12px">En curso…</span>`}</td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:24px;font-size:12px;color:var(--txt2)">
+          <span>Cambios: <span class="mono" style="color:var(--amber)">${mcs.length}</span></span>
+          <span>Tiempo total: <span class="mono" style="color:var(--amber)">${totalMoldMin} min</span></span>
+        </div>
+      </div>`}
+    </div>`:'';
+
+  const logs=[...(prod.audit_log||[])].reverse();
+  const tabAudit=tab==='audit'?`
+    <div>
+      <div class="st" style="margin-bottom:16px">Registro de Cambios</div>
+      ${logs.length===0?`<div class="empty">Sin registros</div>`:
+      logs.map(e=>`
+        <div class="audit-e">
+          <div class="row"><span class="audit-who">${escHTML(e.by_name||uname(e.by))}</span><div class="sp"></div><span class="audit-time">${fmt(e.at)}</span></div>
+          <div class="audit-act">${escHTML(e.action)}</div>
+          ${Object.keys(e.changes||{}).filter(k=>k!=='damage').length>0?`
+          <div style="margin-top:5px;font-size:11px;color:var(--txt3);display:flex;gap:14px;flex-wrap:wrap">
+            ${Object.entries(e.changes).filter(([k])=>k!=='damage').map(([k,v])=>`<span>${escHTML(k)}: <span style="color:var(--red);text-decoration:line-through">${escHTML(String(v.old))}</span> → <span style="color:var(--green)">${escHTML(String(v.new))}</span></span>`).join('')}
+          </div>`:''}
+        </div>`).join('')}
+    </div>`:'';
+
+  return `
+  <div class="ph">
+    <div class="row" style="flex-wrap:nowrap;gap:10px;align-items:flex-start">
+      <button class="btn btn-secondary btn-sm" data-page="productions" style="flex-shrink:0;padding:6px 10px">← Volver</button>
+      <div style="flex:1;min-width:0">
+        <div class="ph-title" style="font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHTML(prod.product)}</div>
+        <div class="ph-sub" style="font-size:10px">${escHTML(m?.name||prod.machine_id)} · ${prod.tipo==='personalizado'?'<strong style=\"color:var(--amber)\">PERS · '+escHTML(prod.marca||'')+'</strong> · ':'BLANCO · '}Turno ${escHTML(prod.shift)}</div>
+      </div>
+      ${statusBadge(prod.status)}
+    </div>
+  </div>
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;gap:10px;align-items:flex-end">
+    <div style="flex:1">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:5px">Cantidad Producida</div>
+      <input id="quick-qty" type="number" value="${prod.produced_qty||0}" style="width:100%;background:#f8fafc;border:1px solid var(--border2);border-radius:5px;padding:9px 11px;color:var(--txt);font-size:16px;font-family:var(--mono);outline:none"/>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:5px">Estado</div>
+      <select id="quick-status" style="width:100%;background:#f8fafc;border:1px solid var(--border2);border-radius:5px;padding:9px 11px;color:var(--txt);font-size:13px;outline:none">
+        ${Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${prod.status===k?' selected':''}>${escHTML(v.label)}</option>`).join('')}
+      </select>
+    </div>
+    <button id="quick-save" class="btn btn-primary btn-sm" style="padding:9px 14px;white-space:nowrap">✓ Guardar</button>
+  </div>
+  <div class="content">
+    <div class="tabs">
+      <div class="tab${tab==='info'?' active':''}" data-tab="info">Información</div>
+      <div class="tab${tab==='damages'?' active':''}" data-tab="damages">Daños (${prod.damages?.length||0})</div>
+      <div class="tab${tab==='moldes'?' active':''}" data-tab="moldes">Cambios de Molde (${mcs.length})</div>
+      ${state.user.role==='admin'?`<div class="tab${tab==='audit'?' active':''}" data-tab="audit">Auditoría (${prod.audit_log?.length||0})</div>`:''}
+    </div>
+    ${tabInfo}${tabDmg}${tabMolde}${tabAudit}
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   ADMIN
+══════════════════════════════════════ */
+function renderAdmin(){
+  const pending =state.users.filter(u=>u.status==='pending');
+  const approved=state.users.filter(u=>u.status==='approved');
+  const rejected=state.users.filter(u=>u.status==='rejected');
+  const roleTag=r=>{const c=r==='admin'?'var(--red)':r==='producer'?'var(--amber)':'var(--blue)';return `<span class="badge" style="color:${c};background:${c}1a">${escHTML(r)}</span>`;};
+
+  return `
+  <div class="ph">
+    <div class="row" style="align-items:flex-start">
+      <div>
+        <div class="ph-title">Gestión de Usuarios</div>
+        <div class="ph-sub">Aprobación de accesos · ${state.users.length} usuario${state.users.length!==1?'s':''} registrado${state.users.length!==1?'s':''}</div>
+      </div>
+      <div class="sp"></div>
+      ${state.user.role==='admin'?`<button class="btn btn-primary btn-sm" id="adm-create-toggle">+ Crear Usuario</button>`:''}
+    </div>
+  </div>
+  <div class="content">
+    <div id="adm-create-form" style="display:none;margin-bottom:20px">
+      <div class="card fg" style="max-width:520px">
+        <div class="st">Nuevo Usuario</div>
+        <div class="fr">
+          <div class="field"><label>Nombre Completo *</label><input id="adm-name" placeholder="ej: Ana Torres"/></div>
+          <div class="field"><label>Usuario *</label><input id="adm-user" placeholder="ej: ana.torres"/></div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>Contraseña *</label><input id="adm-pass" type="password" placeholder="mínimo 4 caracteres"/></div>
+          <div class="field"><label>Rol</label>
+            <select id="adm-role">
+              <option value="operator">Operador</option>
+              <option value="producer">Productor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div id="adm-create-err" class="err"></div>
+        <div class="row">
+          <button class="btn btn-primary btn-sm" id="adm-create-save">✓ Crear Usuario</button>
+          <button class="btn btn-secondary btn-sm" id="adm-create-cancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    ${pending.length?`
+    <div class="st" style="color:var(--amber)">⏳ Pendientes de Aprobación (${pending.length})</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
+      <div class="tw"><table>
+        <thead><tr><th>Nombre</th><th>Usuario</th><th>Solicitud</th><th>Acciones</th></tr></thead>
+        <tbody>${pending.map(u=>`<tr>
+          <td style="font-weight:700">${escHTML(u.name)}</td>
+          <td class="mono txt2">${escHTML(u.username)}</td>
+          <td style="font-size:11px;color:var(--txt3)">${fmt(u.created_at)}</td>
+          <td><div class="row">
+            <button class="btn btn-sm btn-approve" data-approve="${u.id}">✓ Aprobar</button>
+            <button class="btn btn-sm btn-danger" data-reject="${u.id}">✗ Rechazar</button>
+          </div></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`:''}
+
+    <div class="st">Usuarios Activos (${approved.length})</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
+      <div class="tw"><table>
+        <thead><tr><th>Nombre</th><th>Usuario</th><th>Rol actual</th><th>Cambiar Rol</th><th>Acción</th></tr></thead>
+        <tbody>${approved.map(u=>`<tr>
+          <td style="font-weight:700">${escHTML(u.name)}</td>
+          <td class="mono txt2">${escHTML(u.username)}</td>
+          <td>${roleTag(u.role)}</td>
+          <td>${u.id!==state.user.id?`
+            <select data-role-uid="${u.id}" style="background:#f8fafc;border:1px solid var(--border2);color:var(--txt);border-radius:4px;padding:5px 9px;font-size:12px">
+              <option value="operator"${u.role==='operator'?' selected':''}>Operador</option>
+              <option value="producer"${u.role==='producer'?' selected':''}>Productor</option>
+              <option value="admin"${u.role==='admin'?' selected':''}>Admin</option>
+            </select>`:`<span class="txt3" style="font-size:11px">Tu cuenta</span>`}
+          </td>
+          <td>${u.id!==state.user.id?`<button class="btn btn-sm btn-danger" data-revoke="${u.id}">Revocar</button>`:''}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+
+    ${rejected.length?`
+    <div class="st txt3">Rechazados / Revocados (${rejected.length})</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
+      <div class="tw"><table>
+        <thead><tr><th>Nombre</th><th>Usuario</th><th>Acción</th></tr></thead>
+        <tbody>${rejected.map(u=>`<tr>
+          <td style="color:var(--txt2)">${escHTML(u.name)}</td>
+          <td class="mono txt3">${escHTML(u.username)}</td>
+          <td><button class="btn btn-sm btn-approve" data-approve="${u.id}">Reactivar</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>
+    </div>`:''}
+
+    <div class="card">
+      <div class="st">Roles del Sistema</div>
+      <div style="font-size:13px;color:var(--txt2);line-height:2">
+        <div><span style="color:var(--red);font-weight:700">Admin</span> — Control total. Aprueba usuarios, asigna roles, crea y cancela producciones.</div>
+        <div><span style="color:var(--amber);font-weight:700">Productor</span> — Crea producciones nuevas, actualiza estados, cantidades y precios.</div>
+        <div><span style="color:var(--blue);font-weight:700">Operador</span> — Actualiza cantidades y estados. Reporta daños. No puede crear producciones.</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   AUDIT PAGE
+══════════════════════════════════════ */
+function renderAudit(){
+  const all=state.productions.flatMap(p=>
+    (p.audit_log||[]).map(e=>({...e,prod_product:p.product,prod_machine:p.machine_id,prod_id:p.id}))
+  ).sort((a,b)=>new Date(b.at)-new Date(a.at));
+
+  return `
+  <div class="ph">
+    <div class="ph-title">Registro de Auditoría</div>
+    <div class="ph-sub">Historial completo de acciones — ${all.length} evento${all.length!==1?'s':''}</div>
+  </div>
+  <div class="content">
+    ${all.length===0?`<div class="empty">Sin registros aún</div>`:
+    all.map(e=>`
+      <div class="audit-e">
+        <div class="row">
+          <span class="audit-who">${escHTML(e.by_name||uname(e.by))}</span>
+          <span style="margin-left:8px;font-size:12px">${escHTML(e.action)}</span>
+          <div class="sp"></div>
+          <span class="audit-time">${fmt(e.at)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--txt3);margin-top:3px">${escHTML(machName(e.prod_machine))} · ${escHTML(e.prod_product)}</div>
+      </div>`).join('')}
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   BIND ALL EVENTS
+══════════════════════════════════════ */
+function bindAll(){
+  /* NAV */
+  document.querySelectorAll('[data-page]').forEach(el=>{
+    el.addEventListener('click',()=>{ state.page=el.dataset.page; state.tab='info'; render(); });
+  });
+  document.querySelectorAll('.sb-item[data-page]').forEach(el=>{
+    el.addEventListener('click',()=>{ state.page=el.dataset.page; state.tab='info'; render(); });
+  });
+  document.getElementById('logout-btn')?.addEventListener('click',()=>{ state.user=null; state.authPage='login'; render(); });
+
+  /* OPEN PROD FROM CARD/ROW */
+  document.querySelectorAll('[data-open-prod]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const id=el.dataset.openProd;
+      if(!id)return;
+      state.selectedProdId=id; state.page='production-detail'; state.tab='info'; render();
+    });
+  });
+
+  /* OPEN MACHINE QUEUE */
+  document.querySelectorAll('[data-open-machine]').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      state.selectedMachineId=el.dataset.openMachine;
+      state.page='machine-queue'; render();
+    });
+  });
+
+  /* FILTERS */
+  document.getElementById('f-q')?.addEventListener('input',e=>{ state.filters.q=e.target.value; render(); });
+  document.getElementById('f-mach')?.addEventListener('change',e=>{ state.filters.machine=e.target.value; render(); });
+  document.getElementById('f-stat')?.addEventListener('change',e=>{ state.filters.status=e.target.value; render(); });
+  document.getElementById('f-shift')?.addEventListener('change',e=>{ state.filters.shift=e.target.value; render(); });
+
+  /* TABS */
+  document.querySelectorAll('[data-tab]').forEach(el=>{
+    el.addEventListener('click',()=>{ state.tab=el.dataset.tab; render(); });
+  });
+
+  /* NEW PRODUCTION */
+  document.getElementById('np-tipo')?.addEventListener('change',function(){
+    const wrap=document.getElementById('np-marca-wrap');
+    if(wrap) wrap.style.display=this.value==='personalizado'?'block':'none';
+  });
+  document.getElementById('np-mach')?.addEventListener('change',function(){
+    const m=MACHINES.find(x=>x.id===this.value);
+    const ps=document.getElementById('np-prod');
+    if(!m){ ps.innerHTML='<option value="">Primero selecciona máquina</option>'; return; }
+    ps.innerHTML='<option value="">Seleccionar producto</option>'+m.products.map(p=>`<option value="${escHTML(p)}">${escHTML(p)}</option>`).join('');
+  });
+  document.getElementById('np-save')?.addEventListener('click',()=>{
+    const mid=document.getElementById('np-mach').value;
+    const prod=document.getElementById('np-prod').value;
+    const qty=parseInt(document.getElementById('np-qty').value)||0;
+    const err=document.getElementById('np-err');
+    const tipo=document.getElementById('np-tipo').value;
+    const marca=document.getElementById('np-marca')?.value.trim()||'';
+    if(!mid||!prod||!qty){ err.textContent='Completa: Máquina, Producto y Cantidad Objetivo'; return; }
+    if(tipo==='personalizado'&&!marca){ err.textContent='Indica el nombre de la marca'; return; }
+    const np={
+      id:'prod_'+uid(), machine_id:mid, product:prod,
+      tipo:tipo, marca:tipo==='personalizado'?marca:'',
+      status:'pendiente', shift:document.getElementById('np-shift').value,
+      target_qty:qty, produced_qty:0,
+      unit_price:parseFloat(document.getElementById('np-price').value)||0,
+      observations:document.getElementById('np-obs').value,
+      damages:[], mold_changes:[], start_time:null, end_time:null,
+      created_by:state.user.id, created_at:now(),
+      audit_log:[{action:'Producción creada',by:state.user.id,by_name:state.user.name,at:now(),changes:{},note:''}]
+    };
+    state.productions.push(np);
+    DB.set('kv_productions',state.productions);
+    notify('success','Producción creada correctamente');
+    state.page='productions'; render();
+  });
+
+  /* QUICK SAVE (top bar) */
+  document.getElementById('quick-save')?.addEventListener('click',()=>{
+    const prod=state.productions.find(p=>p.id===state.selectedProdId);
+    if(!prod) return;
+    const newQty=parseInt(document.getElementById('quick-qty').value)||0;
+    const newStatus=document.getElementById('quick-status').value;
+    const changes={};
+    if(newStatus!==prod.status) changes.status={old:prod.status,new:newStatus};
+    if(newQty!==prod.produced_qty) changes.produced_qty={old:prod.produced_qty,new:newQty};
+    let mold_changes=[...(prod.mold_changes||[])];
+    let start_time=prod.start_time, end_time=prod.end_time;
+    if(prod.status!=='cambio_molde'&&newStatus==='cambio_molde') mold_changes.push({id:uid(),started_at:now(),ended_at:null,duration_min:null});
+    if(prod.status==='cambio_molde'&&newStatus!=='cambio_molde') mold_changes=mold_changes.map(mc=>mc.ended_at?mc:{...mc,ended_at:now(),duration_min:durMin(mc.started_at,now())});
+    if(prod.status==='pendiente'&&newStatus==='en_proceso') start_time=now();
+    if(['completada','cancelada'].includes(newStatus)&&!prod.end_time) end_time=now();
+    const updated={...prod,produced_qty:newQty,status:newStatus,mold_changes,start_time,end_time,
+      audit_log:[...(prod.audit_log||[]),{action:'Actualización rápida',by:state.user.id,by_name:state.user.name,at:now(),changes,note:''}]};
+    state.productions=state.productions.map(p=>p.id===state.selectedProdId?updated:p);
+    DB.set('kv_productions',state.productions);
+    notify('success','Guardado correctamente');
+    render();
+  });
+
+  /* DETAIL SAVE */
+  document.getElementById('det-save')?.addEventListener('click',()=>{
+    const prod=state.productions.find(p=>p.id===state.selectedProdId);
+    if(!prod) return;
+    const newStatus=document.getElementById('det-status').value;
+    const newQty=parseInt(document.getElementById('det-qty').value)||0;
+    const newObs=document.getElementById('det-obs').value;
+    const changes={};
+    if(newStatus!==prod.status) changes.status={old:prod.status,new:newStatus};
+    if(newQty!==prod.produced_qty) changes.produced_qty={old:prod.produced_qty,new:newQty};
+
+    let mold_changes=[...(prod.mold_changes||[])];
+    let start_time=prod.start_time, end_time=prod.end_time;
+    if(prod.status!=='cambio_molde'&&newStatus==='cambio_molde') mold_changes.push({id:uid(),started_at:now(),ended_at:null,duration_min:null});
+    if(prod.status==='cambio_molde'&&newStatus!=='cambio_molde') mold_changes=mold_changes.map(mc=>mc.ended_at?mc:{...mc,ended_at:now(),duration_min:durMin(mc.started_at,now())});
+    if(prod.status==='pendiente'&&newStatus==='en_proceso') start_time=now();
+    if(['completada','cancelada'].includes(newStatus)&&!prod.end_time) end_time=now();
+
+    const updated={...prod,status:newStatus,produced_qty:newQty,observations:newObs,mold_changes,start_time,end_time,
+      audit_log:[...(prod.audit_log||[]),{action:'Actualización',by:state.user.id,by_name:state.user.name,at:now(),changes,note:''}]};
+    state.productions=state.productions.map(p=>p.id===state.selectedProdId?updated:p);
+    DB.set('kv_productions',state.productions);
+    notify('success','Guardado correctamente');
+    render();
+  });
+
+  /* DAMAGE */
+  document.getElementById('dmg-toggle')?.addEventListener('click',()=>{
+    const f=document.getElementById('dmg-form');
+    f.style.display=f.style.display==='none'?'block':'none';
+  });
+  document.getElementById('dmg-cancel')?.addEventListener('click',()=>{ document.getElementById('dmg-form').style.display='none'; });
+  document.getElementById('dmg-save')?.addEventListener('click',()=>{
+    const prod=state.productions.find(p=>p.id===state.selectedProdId);
+    if(!prod) return;
+    const qty=parseInt(document.getElementById('dmg-qty').value)||0;
+    if(!qty){ notify('error','Indica la cantidad de piezas dañadas'); return; }
+    const nd={id:uid(),type:document.getElementById('dmg-type').value,qty,
+      description:document.getElementById('dmg-desc').value,
+      reported_by:state.user.id,reported_by_name:state.user.name,reported_at:now()};
+    const updated={...prod,damages:[...(prod.damages||[]),nd],
+      audit_log:[...(prod.audit_log||[]),{action:`Daño: ${nd.type} (${nd.qty} uds)`,by:state.user.id,by_name:state.user.name,at:now(),changes:{damage:nd},note:''}]};
+    state.productions=state.productions.map(p=>p.id===state.selectedProdId?updated:p);
+    DB.set('kv_productions',state.productions);
+    notify('success','Daño registrado');
+    render();
+  });
+
+  /* ADMIN ACTIONS */
+  document.querySelectorAll('[data-approve]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.approve;
+      state.users=state.users.map(u=>u.id===id?{...u,status:'approved',role:u.role||'operator'}:u);
+      DB.set('kv_users',state.users);
+      notify('success','Usuario aprobado');
+      render();
+    });
+  });
+  document.querySelectorAll('[data-reject]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.reject;
+      state.users=state.users.map(u=>u.id===id?{...u,status:'rejected'}:u);
+      DB.set('kv_users',state.users);
+      notify('success','Usuario rechazado');
+      render();
+    });
+  });
+  document.querySelectorAll('[data-revoke]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.revoke;
+      state.users=state.users.map(u=>u.id===id?{...u,status:'rejected'}:u);
+      DB.set('kv_users',state.users);
+      notify('success','Acceso revocado');
+      render();
+    });
+  });
+  document.querySelectorAll('[data-role-uid]').forEach(el=>{
+    el.addEventListener('change',()=>{
+      const id=el.dataset.roleUid;
+      state.users=state.users.map(u=>u.id===id?{...u,role:el.value}:u);
+      DB.set('kv_users',state.users);
+      notify('success','Rol actualizado');
+      render();
+    });
+  });
+
+  /* CREAR USUARIO */
+  document.getElementById('adm-create-toggle')?.addEventListener('click',()=>{
+    const f=document.getElementById('adm-create-form');
+    f.style.display=f.style.display==='none'?'block':'none';
+    if(f.style.display==='block') document.getElementById('adm-name')?.focus();
+  });
+  document.getElementById('adm-create-cancel')?.addEventListener('click',()=>{
+    document.getElementById('adm-create-form').style.display='none';
+  });
+  document.getElementById('adm-create-save')?.addEventListener('click',()=>{
+    const name=document.getElementById('adm-name').value.trim();
+    const username=document.getElementById('adm-user').value.trim();
+    const password=document.getElementById('adm-pass').value;
+    const role=document.getElementById('adm-role').value;
+    const err=document.getElementById('adm-create-err');
+    if(!name||!username||!password){ err.textContent='Completa todos los campos'; return; }
+    if(state.users.find(u=>u.username===username)){ err.textContent='Ese nombre de usuario ya existe'; return; }
+    const nu={id:'usr_'+uid(),username,password,name,role,status:'approved',created_at:now(),created_by:state.user.id};
+    state.users.push(nu);
+    DB.set('kv_users',state.users);
+    notify('success',`Usuario "${name}" creado correctamente`);
+    render();
+  });
+
+  /* IMPRENTA */
+  const impSync=()=>{
+    state.imp.cliente   = document.getElementById('imp-cliente')?.value||state.imp.cliente;
+    state.imp.producto  = document.getElementById('imp-producto')?.value||state.imp.producto;
+    state.imp.cantidad  = document.getElementById('imp-cantidad')?.value||state.imp.cantidad;
+    state.imp.material  = document.getElementById('imp-material')?.value||state.imp.material;
+    state.imp.materialOtro = document.getElementById('imp-material-otro')?.value||state.imp.materialOtro;
+    state.imp.tipo      = document.getElementById('imp-tipo')?.value||state.imp.tipo;
+    state.imp.imprenta  = document.getElementById('imp-imprenta')?.value||state.imp.imprenta;
+    state.imp.imprentaOtra = document.getElementById('imp-imprenta-otra')?.value||state.imp.imprentaOtra;
+    state.imp.extras    = document.getElementById('imp-extras')?.value||state.imp.extras;
+    state.imp.extrasOn  = document.getElementById('extras-si')?.checked||state.imp.extrasOn;
+  };
+  document.getElementById('imp-generar-btn')?.addEventListener('click',()=>{
+    impSync(); render();
+    setTimeout(()=>document.getElementById('orden-preview')?.scrollIntoView({behavior:'smooth'}),100);
+  });
+  ['imp-producto','imp-material','imp-imprenta','imp-tipo'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('change',()=>{ impSync(); render(); });
+  });
+  ['extras-si','extras-no'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('change',()=>{
+      state.imp.extrasOn=document.getElementById('extras-si')?.checked||false;
+      impSync(); render();
+    });
+  });
+  document.getElementById('imp-print-btn')?.addEventListener('click',()=>{
+    const el=document.getElementById('orden-preview');
+    if(!el) return;
+    const w=window.open('','_blank');
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+      <style>*{box-sizing:border-box;margin:0;padding:0} body{font-family:'Inter',sans-serif;padding:30px;background:#fff} @media print{body{padding:10px}}</style>
+      </head><body>${el.outerHTML}<${'script'}>window.onload=()=>window.print()</${'script'}></body></html>`);
+    w.document.close();
+  });
+  document.getElementById('imp-wa-btn')?.addEventListener('click',()=>{
+    const imp=state.imp;
+    const troq=TROQUELES[imp.producto]||null;
+    const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
+    const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
+    const extras=imp.extrasOn?(parseInt(imp.extras)||0):0;
+    const hojaTotal=hojaBase+extras;
+    const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
+    const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
+    const msg=`Cliente: ${imp.cliente.toUpperCase()}
+Producto: ${imp.producto}
+Cantidad: ${cant.toLocaleString()} uds
+Material: ${matLabel}
+Tipo: ${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}
+Hojas a enviar: ${hojaTotal.toLocaleString()}
+Imprenta: ${impLabel.toUpperCase()}`;
+    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+  });
+  document.getElementById('imp-reset-btn')?.addEventListener('click',()=>{
+    state.imp={cliente:'',producto:'',cantidad:'',material:'',materialOtro:'',tipo:'nueva',extrasOn:false,extras:0,imprenta:'',imprentaOtra:''};
+    render();
+  });
+  document.getElementById('exp-btn')?.addEventListener('click',()=>{
+    const data=JSON.stringify({users:state.users,productions:state.productions});
+    navigator.clipboard.writeText(data).then(()=>{
+      document.getElementById('exp-ok').style.display='block';
+      notify('success','Datos copiados al portapapeles');
+    }).catch(()=>{
+      const ta=document.createElement('textarea');
+      ta.value=data; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      document.getElementById('exp-ok').style.display='block';
+      notify('success','Datos copiados al portapapeles');
+    });
+  });
+  document.getElementById('imp-btn')?.addEventListener('click',()=>{
+    const txt=document.getElementById('imp-text').value.trim();
+    const err=document.getElementById('imp-err');
+    try{
+      const d=JSON.parse(txt);
+      if(!d.users||!d.productions){ err.textContent='Formato inválido — falta users o productions'; return; }
+      state.users=d.users; state.productions=d.productions;
+      DB.set('kv_users',state.users); DB.set('kv_productions',state.productions);
+      notify('success',`Importado: ${d.users.length} usuarios, ${d.productions.length} producciones`);
+      state.page='dashboard'; render();
+    }catch(e){ err.textContent='JSON inválido — verifica que copiaste el texto completo'; }
+  });
+}
+
+/* ══════════════════════════════════════
+   ORDEN DE IMPRENTA
+══════════════════════════════════════ */
+function renderImprenta(){
+  const imp=state.imp;
+  const troq=TROQUELES[imp.producto]||null;
+  const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
+  const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
+  const extras=imp.extrasOn?(parseInt(imp.extras)||0):0;
+  const hojaTotal=hojaBase+extras;
+  const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
+  const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
+
+  const preview=imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta?`
+  <div style="margin-top:24px">
+    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">Vista previa de la orden</div>
+    <div id="orden-preview" style="background:#fff;border:2px solid #0f1923;border-radius:10px;padding:24px;max-width:480px;font-family:var(--sans)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #0f1923">
+        <div style="font-family:var(--rajd);font-size:20px;font-weight:700;letter-spacing:2px;color:#00923d">◈ KREAVERDE</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#7a8fa8;text-align:right">ORDEN DE IMPRENTA<br><span style="color:#0f1923;font-size:12px">${new Date().toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'})}</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cliente</span>
+          <span style="font-size:16px;font-weight:700;color:#0f1923">${escHTML(imp.cliente.toUpperCase())}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Producto</span>
+          <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(imp.producto)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cantidad</span>
+          <span style="font-size:15px;font-weight:700;color:#0f1923">${cant.toLocaleString()} uds</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Material</span>
+          <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(matLabel)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Tipo</span>
+          <span style="font-size:15px;font-weight:700;color:${imp.tipo==='nueva'?'#00923d':'#1a5fd4'}">${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:2px solid #0f1923">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Hojas a enviar</span>
+          <span style="font-size:24px;font-weight:700;font-family:var(--mono);color:#0f1923">${hojaTotal.toLocaleString()}</span>
+        </div>
+        ${troq?.note?`<div style="font-size:11px;color:#7a8fa8;font-style:italic;padding:4px 0">Nota troquel: ${escHTML(troq.note)}</div>`:''}
+        ${extras>0?`<div style="font-size:11px;color:#1a5fd4;padding:4px 0">Base: ${hojaBase.toLocaleString()} + ${extras.toLocaleString()} hojas extra</div>`:''}
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Imprenta</span>
+          <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(impLabel.toUpperCase())}</span>
+        </div>
+      </div>
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #edf0f5;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;color:#b0bfce">Generado por ${escHTML(state.user.name)}</span>
+        <span style="font-size:10px;color:#b0bfce">KreaVerde — Sistema de Producción</span>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" id="imp-print-btn">🖨 Imprimir / PDF</button>
+      <button class="btn" id="imp-wa-btn" style="background:#25d366;color:#fff;font-family:var(--rajd);font-size:14px;font-weight:700;padding:10px 18px;border-radius:6px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Enviar por WhatsApp
+      </button>
+      <button class="btn btn-secondary" id="imp-reset-btn">Nueva Orden</button>
+    </div>
+  </div>`:'';
+
+  const calcInfo=troq&&cant>0?`
+  <div style="background:#e8f5ee;border:1px solid #b7e5cc;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+    <div style="font-size:26px;font-weight:700;font-family:var(--mono);color:#00923d">${hojaBase.toLocaleString()}</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#00923d">hojas base calculadas</div>
+      <div style="font-size:11px;color:#4a9065">${cant.toLocaleString()} uds ÷ ${troq.units} uds/hoja${troq.note?' · '+troq.note:''}</div>
+    </div>
+  </div>`:'';
+
+  return `
+  <div class="ph">
+    <div class="ph-title">🖨 Orden de Imprenta</div>
+    <div class="ph-sub">Genera órdenes para enviar a la imprenta</div>
+  </div>
+  <div class="content">
+    <div style="max-width:560px">
+      <div class="card fg">
+        <div class="st">Datos de la Orden</div>
+        <div class="field">
+          <label>Cliente *</label>
+          <input id="imp-cliente" placeholder="Nombre del cliente" value="${escHTML(imp.cliente)}"/>
+        </div>
+        <div class="fr">
+          <div class="field">
+            <label>Producto *</label>
+            <select id="imp-producto">
+              <option value="">Seleccionar producto</option>
+              ${PRODUCTOS_IMPRENTA.map(p=>`<option value="${escHTML(p)}"${imp.producto===p?' selected':''}>${escHTML(p)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Cantidad *</label>
+            <input id="imp-cantidad" placeholder="ej: 10000" value="${escHTML(imp.cantidad)}"/>
+          </div>
+        </div>
+
+        ${calcInfo}
+
+        <div class="fr">
+          <div class="field">
+            <label>Material *</label>
+            <select id="imp-material">
+              <option value="">Seleccionar material</option>
+              ${MATERIALES.map(m=>`<option value="${escHTML(m)}"${imp.material===m?' selected':''}>${escHTML(m)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo *</label>
+            <select id="imp-tipo">
+              <option value="nueva"${imp.tipo==='nueva'?' selected':''}>Nueva</option>
+              <option value="reimpresion"${imp.tipo==='reimpresion'?' selected':''}>Reimpresión</option>
+            </select>
+          </div>
+        </div>
+
+        ${imp.material==='Otro'?`<div class="field"><label>Especificar material</label><input id="imp-material-otro" placeholder="Describe el material" value="${escHTML(imp.materialOtro)}"/></div>`:''}
+
+        <div class="field">
+          <label>¿Desea enviar hojas extra?</label>
+          <div style="display:flex;gap:12px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:normal;letter-spacing:0;text-transform:none;color:var(--txt)">
+              <input type="radio" name="extras-r" id="extras-no" ${!imp.extrasOn?'checked':''} style="width:auto"/> No
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:normal;letter-spacing:0;text-transform:none;color:var(--txt)">
+              <input type="radio" name="extras-r" id="extras-si" ${imp.extrasOn?'checked':''} style="width:auto"/> Sí
+            </label>
+          </div>
+        </div>
+
+        ${imp.extrasOn?`<div class="field"><label>¿Cuántas hojas extra?</label><input id="imp-extras" type="number" placeholder="0" value="${imp.extras}"/></div>`:''}
+
+        <div class="field">
+          <label>Imprenta *</label>
+          <select id="imp-imprenta">
+            <option value="">Seleccionar imprenta</option>
+            ${IMPRENTAS.map(i=>`<option value="${escHTML(i)}"${imp.imprenta===i?' selected':''}>${escHTML(i)}</option>`).join('')}
+          </select>
+        </div>
+
+        ${imp.imprenta==='Otra'?`<div class="field"><label>Nombre de la imprenta</label><input id="imp-imprenta-otra" placeholder="Nombre de la imprenta" value="${escHTML(imp.imprentaOtra)}"/></div>`:''}
+
+        <button class="btn btn-primary" id="imp-generar-btn" style="margin-top:6px">Generar Orden</button>
+      </div>
+
+      ${preview}
+    </div>
+  </div>`;
+}
