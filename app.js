@@ -186,7 +186,8 @@ function renderBottomNav(){
     ...(u.role==='admin'||u.role==='producer'?[{id:'admin',label:'Usuarios',icon:'◈'}]:[]),
     ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
     {id:'exportar',label:'Datos',icon:'⇅'},
-    ...(u.role==='admin'||u.role==='producer'?[{id:'imprenta',label:'Imprenta',icon:'🖨'}]:[])
+    ...(u.role==='admin'?[{id:'imprenta',label:'Imprenta',icon:'🖨'}]:[]),
+    ...(u.role==='admin'?[{id:'admin-dashboard',label:'Panel',icon:'★'}]:[])
   ];
   return `<div class="bottom-nav">${items.map(it=>`
     <div class="bn-item${state.page===it.id?' active':''}" data-page="${it.id}">
@@ -311,7 +312,8 @@ function renderSidebar(){
     ...(u.role==='admin'||u.role==='producer'?[{id:'admin',label:'Usuarios',icon:'◈'}]:[]),
     ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
     {id:'exportar',label:'Exportar/Importar',icon:'⇅'},
-    ...(u.role==='admin'||u.role==='producer'?[{id:'imprenta',label:'Orden Imprenta',icon:'🖨'}]:[])
+    ...(u.role==='admin'?[{id:'imprenta',label:'Orden Imprenta',icon:'🖨'}]:[]),
+    ...(u.role==='admin'?[{id:'admin-dashboard',label:'Panel Admin',icon:'★'}]:[])
   ];
   const roleColor=u.role==='admin'?'var(--red)':u.role==='producer'?'var(--amber)':'var(--blue)';
   return `
@@ -346,7 +348,8 @@ function renderPage(){
     case 'admin':            return (state.user.role==='admin'||state.user.role==='producer')?renderAdmin():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'audit':            return state.user.role==='admin'?renderAudit():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'exportar':         return renderExportar();
-    case 'imprenta':         return renderImprenta();
+    case 'imprenta':         return state.user.role==='admin'?renderImprenta():'<div class="content"><div class="empty">Acceso restringido — solo administradores</div></div>';
+    case 'admin-dashboard':  return state.user.role==='admin'?renderAdminDashboard():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     default:                 return renderDashboard();
   }
 }
@@ -1530,8 +1533,121 @@ function renderImprenta(){
     </div>
   </div>`;
 }
-if(document.readyState==="loading"){
-  document.addEventListener("DOMContentLoaded",loadData);
+
+/* ══════════════════════════════════════
+   ADMIN DASHBOARD
+══════════════════════════════════════ */
+function renderAdminDashboard(){
+  const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
+  const active=state.productions.filter(p=>activeStatuses.includes(p.status))
+    .sort((a,b)=>{
+      const rank=s=>s==='en_proceso'?0:s==='cambio_molde'?1:s==='pausada'?2:3;
+      return rank(a.status)-rank(b.status)||new Date(a.created_at)-new Date(b.created_at);
+    });
+  const completed=state.productions.filter(p=>p.status==='completada').slice(-5).reverse();
+  const imp=state.imp;
+  const troq=TROQUELES[imp.producto]||null;
+  const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
+  const hojaTotal=troq&&cant>0?Math.ceil(cant/troq.units)+(imp.extrasOn?(parseInt(imp.extras)||0):0):0;
+  const hasImpOrden=imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta;
+  const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
+  const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
+  const stColor=s=>STATUS[s]?.color||'#64748b';
+  const stLabel=s=>STATUS[s]?.label||s;
+  const stIcon=s=>s==='en_proceso'?'▶':s==='cambio_molde'?'🔧':s==='pausada'?'⏸':'⏳';
+
+  const prodRows=active.length?active.map(p=>{
+    const m=MACHINES.find(x=>x.id===p.machine_id);
+    const perc=pct(p.produced_qty||0,p.target_qty||1);
+    return `<div style="background:#fff;border-radius:12px;border:2px solid ${stColor(p.status)}33;padding:14px 16px;cursor:pointer;margin-bottom:10px" data-open-prod="${p.id}">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(p.product)}</div>
+          <div style="font-size:11px;color:#7a8fa8;margin-top:2px">${escHTML(m?.name||p.machine_id)} · Turno ${escHTML(p.shift)}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <span style="padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${stColor(p.status)};background:${stColor(p.status)}18">${stIcon(p.status)} ${escHTML(stLabel(p.status))}</span>
+          <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#0f1923;margin-top:4px">${(p.produced_qty||0).toLocaleString()} <span style="font-size:11px;color:#92a6bf">/ ${(p.target_qty||0).toLocaleString()}</span></div>
+        </div>
+      </div>
+      <div style="height:6px;background:#edf0f5;border-radius:3px;overflow:hidden">
+        <div style="width:${perc}%;height:100%;background:${m?.color||'#00923d'};border-radius:3px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px">
+        <span style="font-size:11px;color:${m?.color||'#00923d'};font-weight:700">${perc}%</span>
+        ${p.damages?.length?`<span style="font-size:11px;color:#cc1f1f">⚠ ${p.damages.length} daño${p.damages.length>1?'s':''}</span>`:''}
+        ${p.tipo==='personalizado'?`<span style="font-size:11px;color:#b86e00;font-weight:700">${escHTML(p.marca)}</span>`:''}
+      </div>
+    </div>`;
+  }).join(''):`<div class="empty">Sin órdenes activas</div>`;
+
+  const impCard=hasImpOrden?`
+  <div class="card" style="margin-bottom:20px">
+    <div class="st" style="margin-bottom:14px">🖨 Última Orden de Imprenta</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Cliente</span><strong>${escHTML(imp.cliente.toUpperCase())}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Producto</span><strong>${escHTML(imp.producto)}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Cantidad</span><strong>${cant.toLocaleString()} uds</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Material</span><strong>${escHTML(matLabel)}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Tipo</span><strong style="color:${imp.tipo==='nueva'?'#00923d':'#1a5fd4'}">${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}</strong></div>
+      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:2px solid #0f1923"><span style="color:var(--txt2)">Hojas a enviar</span><strong style="font-family:var(--mono);font-size:20px">${hojaTotal.toLocaleString()}</strong></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Imprenta</span><strong>${escHTML(impLabel.toUpperCase())}</strong></div>
+    </div>
+    <button class="btn btn-sm btn-primary" style="margin-top:14px;width:100%;justify-content:center" data-page="imprenta">Ver / Editar orden →</button>
+  </div>`:`<div class="card" style="margin-bottom:20px;text-align:center;padding:24px">
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:12px">Sin orden de imprenta activa</div>
+    <button class="btn btn-primary btn-sm" data-page="imprenta">+ Nueva Orden Imprenta</button>
+  </div>`;
+
+  return `
+  <div class="ph">
+    <div class="ph-title">★ Panel Administrador</div>
+    <div class="ph-sub">Vista rápida de todas las operaciones activas</div>
+  </div>
+  <div class="content">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px">
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
+        <div style="font-family:var(--mono);font-size:26px;color:#00923d">${active.filter(p=>p.status==='en_proceso').length}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">En Proceso</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
+        <div style="font-family:var(--mono);font-size:26px;color:#64748b">${active.filter(p=>p.status==='pendiente').length}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Pendientes</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
+        <div style="font-family:var(--mono);font-size:26px;color:#2979ff">${completed.length}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Completadas</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
+        <div style="font-family:var(--mono);font-size:26px;color:#cc1f1f">${state.productions.reduce((s,p)=>s+(p.damages?.length||0),0)}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Daños</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:12px;font-family:var(--rajd)">☰ Producción Activa (${active.length})</div>
+        ${prodRows}
+        ${active.length?`<button class="btn btn-secondary btn-sm" data-page="productions" style="width:100%;justify-content:center;margin-top:4px">Ver historial →</button>`:''}
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:12px;font-family:var(--rajd)">🖨 Imprenta</div>
+        ${impCard}
+        ${completed.length?`
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:12px;margin-top:8px;font-family:var(--rajd)">✓ Últimas Completadas</div>
+        ${completed.map(p=>`<div style="padding:10px 14px;background:#fff;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+          <div><div style="font-size:13px;font-weight:600">${escHTML(p.product)}</div><div style="font-size:11px;color:#7a8fa8">${escHTML(machName(p.machine_id))}</div></div>
+          <div style="text-align:right"><div style="font-family:var(--mono);font-size:14px;color:#2979ff">${(p.produced_qty||0).toLocaleString()}</div><div style="font-size:10px;color:#92a6bf">uds</div></div>
+        </div>`).join('')}`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',loadData);
 }else{
   loadData();
 }
