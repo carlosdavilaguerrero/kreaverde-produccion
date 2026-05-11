@@ -69,7 +69,8 @@ let state = {
   authPage: 'login',
   tab: 'info',
   filters: {machine:'',status:'',shift:'',q:''},
-  imp: { cliente:'', producto:'', cantidad:'', material:'', materialOtro:'', tipo:'nueva', extrasOn:false, extras:0, imprenta:'', imprentaOtra:'' }
+  imp: { cliente:'', producto:'', cantidad:'', material:'', materialOtro:'', tipo:'nueva', extrasOn:false, extras:0, imprenta:'', imprentaOtra:'' },
+  imp_orders: []
 };
 
 /* ══════════════════════════════════════
@@ -108,31 +109,37 @@ const DB = {
 };
 
 async function loadData(){
+  // Restaurar estado del formulario de imprenta desde localStorage
+  const savedImp=DB.get('kv_imp_state');
+  if(savedImp) state.imp={...state.imp,...savedImp};
+
   document.getElementById('app').innerHTML=`
     <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:14px;background:#edf0f5">
       <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#00923d;letter-spacing:2px">◈ KREAVERDE</div>
       <div style="font-size:13px;color:#7a8fa8">Conectando con la base de datos…</div>
     </div>`;
   try{
-    const [sbUsers, sbProds] = await Promise.all([
+    const [sbUsers, sbProds, sbImp] = await Promise.all([
       sbFetch('kv_users'),
-      sbFetch('kv_productions','&order=created_at.asc')
+      sbFetch('kv_productions','&order=created_at.asc'),
+      sbFetch('kv_imprenta','&order=created_at.desc')
     ]);
     if(Array.isArray(sbUsers)&&sbUsers.length>0){
-      state.users=sbUsers; DB.get('kv_users'); localStorage.setItem('kv_users',JSON.stringify(sbUsers));
+      state.users=sbUsers; localStorage.setItem('kv_users',JSON.stringify(sbUsers));
     } else {
       state.users=[ADMIN_USER]; sbUpsert('kv_users',[ADMIN_USER]);
     }
     state.productions=Array.isArray(sbProds)?sbProds:[];
     _cachedProds=[...state.productions];
     localStorage.setItem('kv_productions',JSON.stringify(state.productions));
+    state.imp_orders=Array.isArray(sbImp)?sbImp:[];
   } catch(e){
-    // Fallback a localStorage si no hay conexión
     let users=DB.get('kv_users');
     if(!users||!users.length){ users=[ADMIN_USER]; }
     state.users=users;
     state.productions=DB.get('kv_productions')||[];
     _cachedProds=[...state.productions];
+    state.imp_orders=[];
     notify('error','Sin conexión — usando datos locales');
   }
   render();
@@ -647,6 +654,34 @@ function renderDashboard(){
       </div>
     </div>
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:14px;font-family:var(--rajd)">Cola de Producción por Máquina</div>
+    ${state.imp_orders.length?`
+    <div style="background:#fff;border:2px solid #0f1923;border-radius:12px;padding:0;overflow:hidden;margin-bottom:22px">
+      <div style="background:#0f1923;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-family:var(--rajd);font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676">🖨 ÓRDENES DE IMPRENTA</div>
+        <span style="font-size:11px;color:#7a8fa8">${state.imp_orders.length} orden${state.imp_orders.length!==1?'es':''}</span>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th></tr></thead>
+        <tbody>${state.imp_orders.map(o=>`<tr>
+          <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
+          <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
+          <td>${escHTML(o.producto)}</td>
+          <td class="mono">${(o.cantidad||0).toLocaleString()}</td>
+          <td style="font-size:11px">${escHTML(o.material)}</td>
+          <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
+          <td class="mono" style="font-weight:700;font-size:14px">${(o.hojas||0).toLocaleString()}</td>
+          <td style="font-size:11px;font-weight:600">${escHTML(o.imprenta)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>`:`
+    <div style="background:#f8fafc;border:1px dashed #dde3ec;border-radius:10px;padding:16px;margin-bottom:22px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:24px">🖨</span>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--txt2)">Sin órdenes de imprenta</div>
+        <div style="font-size:11px;color:var(--txt3)">El administrador debe generar una orden desde el menú Imprenta</div>
+      </div>
+    </div>`}
     ${machCards}
   </div>`;
 }
@@ -1306,7 +1341,29 @@ function bindAll(){
     state.imp.extrasOn  = document.getElementById('extras-si')?.checked||state.imp.extrasOn;
   };
   document.getElementById('imp-generar-btn')?.addEventListener('click',()=>{
-    impSync(); render();
+    impSync();
+    // Guardar estado del formulario
+    DB.set('kv_imp_state', state.imp);
+    // Guardar en historial si está completa
+    const imp=state.imp;
+    const troq=TROQUELES[imp.producto]||null;
+    const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
+    if(imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta){
+      const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
+      const extras=imp.extrasOn?(parseInt(imp.extras)||0):0;
+      const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
+      const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
+      const orden={
+        id:'imp_'+uid(), cliente:imp.cliente, producto:imp.producto,
+        cantidad:cant, material:matLabel, tipo:imp.tipo,
+        hojas:hojaBase+extras, imprenta:impLabel,
+        extras:extras, created_by:state.user.id, created_at:now()
+      };
+      sbUpsert('kv_imprenta',[orden]);
+      state.imp_orders=[orden,...state.imp_orders];
+      notify('success','Orden guardada en el historial');
+    }
+    render();
     setTimeout(()=>document.getElementById('orden-preview')?.scrollIntoView({behavior:'smooth'}),100);
   });
   ['imp-producto','imp-material','imp-imprenta','imp-tipo'].forEach(id=>{
@@ -1348,6 +1405,7 @@ Imprenta: ${impLabel.toUpperCase()}`;
   });
   document.getElementById('imp-reset-btn')?.addEventListener('click',()=>{
     state.imp={cliente:'',producto:'',cantidad:'',material:'',materialOtro:'',tipo:'nueva',extrasOn:false,extras:0,imprenta:'',imprentaOtra:''};
+    DB.set('kv_imp_state', state.imp);
     render();
   });
   document.getElementById('exp-btn')?.addEventListener('click',()=>{
@@ -1443,6 +1501,26 @@ function renderImprenta(){
         <div style="font-size:14px;color:var(--txt2)">No hay orden de imprenta activa</div>
         <div style="font-size:12px;color:var(--txt3);margin-top:6px">El administrador debe crear una orden</div>
       </div>`}
+      ${state.imp_orders.length?`
+      <div style="margin-top:28px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:14px">Historial de Órdenes</div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div class="tw"><table>
+            <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th></tr></thead>
+            <tbody>${state.imp_orders.map(o=>`<tr>
+              <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
+              <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
+              <td>${escHTML(o.producto)}</td>
+              <td class="mono">${(o.cantidad||0).toLocaleString()}</td>
+              <td style="font-size:11px">${escHTML(o.material)}</td>
+              <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
+              <td class="mono" style="font-weight:700;color:#0f1923">${(o.hojas||0).toLocaleString()}</td>
+              <td style="font-size:11px">${escHTML(o.imprenta)}</td>
+            </tr>`).join('')}
+            </tbody>
+          </table></div>
+        </div>
+      </div>`:''}
     </div>`;
   }
 
@@ -1587,12 +1665,28 @@ function renderImprenta(){
 
       ${preview}
     </div>
-  </div>`;
+  </div>
+  ${state.imp_orders.length?`
+  <div class="content" style="margin-top:0;padding-top:0">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:14px">Historial de Órdenes Generadas</div>
+    <div class="card" style="padding:0;overflow:hidden;max-width:900px">
+      <div class="tw"><table>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th></tr></thead>
+        <tbody>${state.imp_orders.map(o=>`<tr>
+          <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
+          <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
+          <td>${escHTML(o.producto)}</td>
+          <td class="mono">${(o.cantidad||0).toLocaleString()}</td>
+          <td style="font-size:11px">${escHTML(o.material)}</td>
+          <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
+          <td class="mono" style="font-weight:700;color:#0f1923">${(o.hojas||0).toLocaleString()}</td>
+          <td style="font-size:11px">${escHTML(o.imprenta)}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+  </div>`:''}`;
 }
-
-/* ══════════════════════════════════════
-   ADMIN DASHBOARD
-══════════════════════════════════════ */
 function renderAdminDashboard(){
   const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
   const active=state.productions.filter(p=>activeStatuses.includes(p.status))
