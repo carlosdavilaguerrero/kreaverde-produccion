@@ -672,8 +672,8 @@ function renderDashboard(){
           <td class="mono" style="font-weight:700;font-size:14px">${(o.hojas||0).toLocaleString()}</td>
           <td style="font-size:11px;font-weight:600">${escHTML(o.imprenta)}</td>
           <td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':'⏳ Pendiente'}</span></td>
-          ${(state.user.role==='admin'||state.user.role==='producer')?`<td>${o.estado!=='enviada'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button>`:'—'}</td>`:''}`
-        ).join('')}
+          ${(state.user.role==='admin'||state.user.role==='producer')?`<td>${o.estado!=='enviada'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button>`:'—'}</td>`:''}
+        </tr>`).join('')}
         </tbody>
       </table></div>
     </div>`:`
