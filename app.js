@@ -661,7 +661,7 @@ function renderDashboard(){
         <span style="font-size:11px;color:#7a8fa8">${state.imp_orders.length} orden${state.imp_orders.length!==1?'es':''}</span>
       </div>
       <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th></tr></thead>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th><th>Estado</th>${(state.user.role==='admin'||state.user.role==='producer')?'<th>Acción</th>':''}</tr></thead>
         <tbody>${state.imp_orders.map(o=>`<tr>
           <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
           <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
@@ -671,7 +671,9 @@ function renderDashboard(){
           <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
           <td class="mono" style="font-weight:700;font-size:14px">${(o.hojas||0).toLocaleString()}</td>
           <td style="font-size:11px;font-weight:600">${escHTML(o.imprenta)}</td>
-        </tr>`).join('')}
+          <td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':'⏳ Pendiente'}</span></td>
+          ${(state.user.role==='admin'||state.user.role==='producer')?`<td>${o.estado!=='enviada'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button>`:'—'}</td>`:''}`
+        ).join('')}
         </tbody>
       </table></div>
     </div>`:`
@@ -1408,6 +1410,40 @@ Imprenta: ${impLabel.toUpperCase()}`;
     DB.set('kv_imp_state', state.imp);
     render();
   });
+
+  /* MARCAR ORDEN IMPRENTA COMO ENVIADA */
+  document.querySelectorAll('[data-imp-send]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.impSend;
+      const orden=state.imp_orders.find(o=>o.id===id);
+      if(!orden) return;
+      // Actualizar estado en Supabase
+      fetch(`${SB_URL}/rest/v1/kv_imprenta?id=eq.${encodeURIComponent(id)}`,{
+        method:'PATCH',
+        headers:{...SB_H,'Prefer':'return=minimal'},
+        body:JSON.stringify({estado:'enviada'})
+      }).catch(()=>{});
+      // Actualizar en estado local
+      state.imp_orders=state.imp_orders.map(o=>o.id===id?{...o,estado:'enviada'}:o);
+      // Crear orden de producción automáticamente
+      const maquina=MACHINES.find(m=>m.products.includes(orden.producto))||MACHINES[4];
+      const np={
+        id:'prod_'+uid(), machine_id:maquina.id, product:orden.producto,
+        tipo:'personalizado', marca:orden.cliente,
+        status:'pendiente', shift:'mañana',
+        target_qty:orden.cantidad||0, produced_qty:0, unit_price:0,
+        observations:`Orden de imprenta — Material: ${orden.material} · Imprenta: ${orden.imprenta}`,
+        damages:[], mold_changes:[], start_time:null, end_time:null,
+        created_by:state.user.id, created_at:now(),
+        audit_log:[{action:`Creado desde orden de imprenta · Cliente: ${orden.cliente}`,by:state.user.id,by_name:state.user.name,at:now(),changes:{}}]
+      };
+      state.productions.push(np);
+      DB.set('kv_productions',state.productions);
+      notify('success',`✓ Enviada — Orden de producción de "${orden.producto}" creada automáticamente`);
+      render();
+    });
+  });
+
   document.getElementById('exp-btn')?.addEventListener('click',()=>{
     const data=JSON.stringify({users:state.users,productions:state.productions});
     navigator.clipboard.writeText(data).then(()=>{
