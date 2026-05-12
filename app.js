@@ -661,17 +661,13 @@ function renderDashboard(){
         <span style="font-size:11px;color:#7a8fa8">${state.imp_orders.length} orden${state.imp_orders.length!==1?'es':''}</span>
       </div>
       <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th><th>Estado</th>${(state.user.role==='admin'||state.user.role==='producer')?'<th>Acción</th>':''}</tr></thead>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th>${(state.user.role==='admin'||state.user.role==='producer')?'<th>Acción</th>':''}</tr></thead>
         <tbody>${state.imp_orders.map(o=>`<tr>
           <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
-          <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
-          <td>${escHTML(o.producto)}</td>
-          <td class="mono">${(o.cantidad||0).toLocaleString()}</td>
-          <td style="font-size:11px">${escHTML(o.material)}</td>
-          <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
-          <td class="mono" style="font-weight:700;font-size:14px">${(o.hojas||0).toLocaleString()}</td>
-          <td style="font-size:11px;font-weight:600">${escHTML(o.imprenta)}</td>
-          <td><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':'⏳ Pendiente'}</span></td>
+          <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}<br><span style="font-size:10px;color:#7a8fa8;font-weight:400">${escHTML(o.producto)} · ${escHTML(o.material)} · ${escHTML(o.imprenta)}</span></td>
+          <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span> ${(o.cantidad||0).toLocaleString()} uds</td>
+          <td class="mono" style="font-weight:700;font-size:16px">${(o.hojas||0).toLocaleString()}</td>
+          <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':'⏳ Pendiente'}</span></td>
           ${(state.user.role==='admin'||state.user.role==='producer')?`<td>${o.estado!=='enviada'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button>`:'—'}</td>`:''}
         </tr>`).join('')}
         </tbody>
