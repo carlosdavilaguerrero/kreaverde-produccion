@@ -1180,7 +1180,7 @@ function bindAll(){
       tipo:tipo, marca:tipo==='personalizado'?marca:'',
       status:'pendiente', shift:document.getElementById('np-shift').value,
       target_qty:qty, produced_qty:0,
-      unit_price:parseFloat(document.getElementById('np-price').value)||0,
+      unit_price:0,
       observations:document.getElementById('np-obs').value,
       damages:[], mold_changes:[], start_time:null, end_time:null,
       created_by:state.user.id, created_at:now(),
