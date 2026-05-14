@@ -703,6 +703,7 @@ function renderProductions(){
     <tr class="clickable" data-open-prod="${p.id}">
       <td style="color:${machColor(p.machine_id)};font-size:11px;font-weight:700">${escHTML(machName(p.machine_id))}</td>
       <td style="font-weight:600">${escHTML(p.product)}</td>
+      <td>${p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700;font-size:11px">${escHTML(p.marca||'PERS')}</span>`:`<span style="color:#7a8fa8;font-size:11px">Blanco</span>`}</td>
       <td>${statusBadge(p.status)}</td>
       <td style="text-transform:capitalize;font-size:11px;color:var(--txt2)">${escHTML(p.shift)}</td>
       <td class="mono" style="font-size:12px">${(p.target_qty||0).toLocaleString()}</td>
