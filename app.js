@@ -554,11 +554,12 @@ function renderDashboard(){
     // Cola siguiente — mismo producto
     const sameRows=sameProduct.map((p,i)=>{
       const pp=pct(p.produced_qty||0,p.target_qty||1);
+      const tipoLabel=p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700">${escHTML(p.marca||'PERS')}</span>`:`<span style="color:#7a8fa8">Blanco</span>`;
       return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #edf0f5;cursor:pointer" data-open-prod="${p.id}">
         <div style="width:28px;height:28px;border-radius:50%;background:#e8f5ee;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#00923d;flex-shrink:0">${i+2}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:#0f1923">${escHTML(p.product)}</div>
-          <div style="font-size:11px;color:#7a8fa8">Objetivo: ${(p.target_qty||0).toLocaleString()}</div>
+          <div style="font-size:11px;color:#7a8fa8">Obj: ${(p.target_qty||0).toLocaleString()} · ${tipoLabel}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:11px;font-weight:700;color:#00923d">✓ Sin cambio</div>
@@ -569,11 +570,12 @@ function renderDashboard(){
 
     // Cola después — distinto producto
     const otherRows=otherProduct.map((p,i)=>{
+      const tipoLabel=p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700">${escHTML(p.marca||'PERS')}</span>`:`<span style="color:#7a8fa8">Blanco</span>`;
       return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #edf0f5;cursor:pointer;background:#fffbf5" data-open-prod="${p.id}">
         <div style="width:28px;height:28px;border-radius:50%;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#b86e00;flex-shrink:0">${sameProduct.length+i+2}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:#0f1923">${escHTML(p.product)}</div>
-          <div style="font-size:11px;color:#7a8fa8">Objetivo: ${(p.target_qty||0).toLocaleString()}</div>
+          <div style="font-size:11px;color:#7a8fa8">Obj: ${(p.target_qty||0).toLocaleString()} · ${tipoLabel}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:11px;font-weight:700;color:#b86e00">⚠ Cambio</div>
