@@ -1,4 +1,3 @@
-
 /* ══════════════════════════════════════
    CONFIG
 ══════════════════════════════════════ */
@@ -13,9 +12,12 @@ const MACHINES = [
 const STATUS = {
   pendiente:    { label:'Pendiente',       color:'#64748b' },
   en_proceso:   { label:'En Proceso',      color:'#00e676' },
-  cambio_molde: { label:'Cambio de Molde', color:'#ffab00' },
-  pausada:      { label:'Pausada',         color:'#ff6d00' },
+  formada:      { label:'Formada',         color:'#00bcd4' },
+  por_sellar:   { label:'Por Sellar',      color:'#9c27b0' },
   completada:   { label:'Completada',      color:'#2979ff' },
+  entregada:    { label:'Entregada',       color:'#00923d' },
+  pausada:      { label:'Pausada',         color:'#ff6d00' },
+  cambio_molde: { label:'Cambio de Molde', color:'#ffab00' },
   cancelada:    { label:'Cancelada',       color:'#ef4444' }
 };
 
@@ -68,7 +70,7 @@ let state = {
   selectedProdId: null,
   authPage: 'login',
   tab: 'info',
-  filters: {machine:'',status:'',shift:'',q:''},
+  filters: {machine:'',status:'',shift:'',q:'',impEstado:'',impQ:''},
   imp: { cliente:'', producto:'', cantidad:'', material:'', materialOtro:'', tipo:'nueva', extrasOn:false, extras:0, imprenta:'', imprentaOtra:'' },
   imp_orders: []
 };
@@ -194,6 +196,7 @@ function renderBottomNav(){
     ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
     {id:'exportar',label:'Datos',icon:'⇅'},
     ...(u.role==='admin'?[{id:'imprenta',label:'Imprenta',icon:'🖨'}]:[]),
+    {id:'imp-orders',label:'Órd.Imp.',icon:'📋'},
     ...(u.role==='admin'?[{id:'admin-dashboard',label:'Panel',icon:'★'}]:[])
   ];
   return `<div class="bottom-nav">${items.map(it=>`
@@ -320,6 +323,7 @@ function renderSidebar(){
     ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
     {id:'exportar',label:'Exportar/Importar',icon:'⇅'},
     ...(u.role==='admin'?[{id:'imprenta',label:'Orden Imprenta',icon:'🖨'}]:[]),
+    {id:'imp-orders',label:'Órdenes Imprenta',icon:'📋'},
     ...(u.role==='admin'?[{id:'admin-dashboard',label:'Panel Admin',icon:'★'}]:[])
   ];
   const roleColor=u.role==='admin'?'var(--red)':u.role==='producer'?'var(--amber)':'var(--blue)';
@@ -356,6 +360,7 @@ function renderPage(){
     case 'audit':            return state.user.role==='admin'?renderAudit():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'exportar':         return renderExportar();
     case 'imprenta':         return renderImprenta();
+    case 'imp-orders':       return renderImpOrders();
     case 'admin-dashboard':  return state.user.role==='admin'?renderAdminDashboard():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     default:                 return renderDashboard();
   }
@@ -656,21 +661,23 @@ function renderDashboard(){
       </div>
     </div>
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:14px;font-family:var(--rajd)">Cola de Producción por Máquina</div>
-    ${state.imp_orders.length?`
+    ${(() => {
+      const pendingImp = state.imp_orders.filter(o=>o.estado!=='enviada');
+      return pendingImp.length?`
     <div style="background:#fff;border:2px solid #0f1923;border-radius:12px;padding:0;overflow:hidden;margin-bottom:22px">
       <div style="background:#0f1923;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-family:var(--rajd);font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676">🖨 ÓRDENES DE IMPRENTA</div>
-        <span style="font-size:11px;color:#7a8fa8">${state.imp_orders.length} orden${state.imp_orders.length!==1?'es':''}</span>
+        <div style="font-family:var(--rajd);font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676">🖨 ÓRDENES DE IMPRENTA PENDIENTES</div>
+        <span style="font-size:11px;color:#7a8fa8">${pendingImp.length} pendiente${pendingImp.length!==1?'s':''}</span>
       </div>
       <div class="tw"><table>
         <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th>${(state.user.role==='admin'||state.user.role==='producer')?'<th>Acción</th>':''}</tr></thead>
-        <tbody>${state.imp_orders.map(o=>`<tr>
+        <tbody>${pendingImp.map(o=>`<tr>
           <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
           <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}<br><span style="font-size:10px;color:#7a8fa8;font-weight:400">${escHTML(o.producto)} · ${escHTML(o.material)} · ${escHTML(o.imprenta)}</span></td>
           <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span> ${(o.cantidad||0).toLocaleString()} uds</td>
           <td class="mono" style="font-weight:700;font-size:16px">${(o.hojas||0).toLocaleString()}</td>
-          <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':'⏳ Pendiente'}</span></td>
-          ${(state.user.role==='admin'||state.user.role==='producer')?`<td>${o.estado!=='enviada'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button>`:'—'}</td>`:''}
+          <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:#fff3cd;color:#b86e00">⏳ Pendiente</span></td>
+          ${(state.user.role==='admin'||state.user.role==='producer')?`<td><button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button></td>`:''}
         </tr>`).join('')}
         </tbody>
       </table></div>
@@ -678,10 +685,11 @@ function renderDashboard(){
     <div style="background:#f8fafc;border:1px dashed #dde3ec;border-radius:10px;padding:16px;margin-bottom:22px;display:flex;align-items:center;gap:12px">
       <span style="font-size:24px">🖨</span>
       <div>
-        <div style="font-size:13px;font-weight:600;color:var(--txt2)">Sin órdenes de imprenta</div>
-        <div style="font-size:11px;color:var(--txt3)">El administrador debe generar una orden desde el menú Imprenta</div>
+        <div style="font-size:13px;font-weight:600;color:var(--txt2)">Sin órdenes de imprenta pendientes</div>
+        <div style="font-size:11px;color:var(--txt3)">Todas enviadas · Ver historial en <strong>Orden Imprenta</strong></div>
       </div>
-    </div>`}
+    </div>`;
+    })()} 
     ${machCards}
   </div>`;
 }
@@ -1416,7 +1424,31 @@ Imprenta: ${impLabel.toUpperCase()}`;
     render();
   });
 
-  /* MARCAR ORDEN IMPRENTA COMO ENVIADA */
+  /* FILTROS ÓRDENES IMPRENTA */
+  document.getElementById('imp-fq')?.addEventListener('input',e=>{ state.filters.impQ=e.target.value; render(); });
+  document.getElementById('imp-festado')?.addEventListener('change',e=>{ state.filters.impEstado=e.target.value; render(); });
+
+  /* CANCELAR ORDEN IMPRENTA */
+  document.querySelectorAll('[data-imp-cancel]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.impCancel;
+      fetch(`${SB_URL}/rest/v1/kv_imprenta?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',headers:{...SB_H,'Prefer':'return=minimal'},body:JSON.stringify({estado:'cancelada'})}).catch(()=>{});
+      state.imp_orders=state.imp_orders.map(o=>o.id===id?{...o,estado:'cancelada'}:o);
+      notify('success','Orden cancelada');
+      render();
+    });
+  });
+
+  /* RESTAURAR ORDEN IMPRENTA */
+  document.querySelectorAll('[data-imp-restore]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.impRestore;
+      fetch(`${SB_URL}/rest/v1/kv_imprenta?id=eq.${encodeURIComponent(id)}`,{method:'PATCH',headers:{...SB_H,'Prefer':'return=minimal'},body:JSON.stringify({estado:'pendiente'})}).catch(()=>{});
+      state.imp_orders=state.imp_orders.map(o=>o.id===id?{...o,estado:'pendiente'}:o);
+      notify('success','Orden restaurada');
+      render();
+    });
+  });
   document.querySelectorAll('[data-imp-send]').forEach(el=>{
     el.addEventListener('click',()=>{
       const id=el.dataset.impSend;
@@ -1728,6 +1760,61 @@ function renderImprenta(){
     </div>
   </div>`:''}`;
 }
+
+/* ══════════════════════════════════════
+   ÓRDENES DE IMPRENTA - HISTORIAL
+══════════════════════════════════════ */
+function renderImpOrders(){
+  const fEstado=state.filters.impEstado||'';
+  const fQ=state.filters.impQ||'';
+  const list=state.imp_orders.filter(o=>{
+    if(fEstado&&o.estado!==fEstado) return false;
+    if(fQ&&!(o.cliente||'').toLowerCase().includes(fQ.toLowerCase())&&!(o.producto||'').toLowerCase().includes(fQ.toLowerCase())) return false;
+    return true;
+  });
+  const canEdit=state.user.role==='admin';
+  const rows=list.length?list.map(o=>`
+    <tr>
+      <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
+      <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
+      <td>${escHTML(o.producto)}</td>
+      <td class="mono">${(o.cantidad||0).toLocaleString()}</td>
+      <td style="font-size:11px">${escHTML(o.material||'')}</td>
+      <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
+      <td class="mono" style="font-weight:700">${(o.hojas||0).toLocaleString()}</td>
+      <td style="font-size:11px">${escHTML(o.imprenta||'')}</td>
+      <td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':o.estado==='cancelada'?'#fdeaea':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':o.estado==='cancelada'?'#cc1f1f':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':o.estado==='cancelada'?'✗ Cancelada':'⏳ Pendiente'}</span></td>
+      ${canEdit?`<td><div class="row" style="gap:5px;flex-wrap:nowrap">
+        ${o.estado==='pendiente'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Enviada</button>`:''}
+        ${o.estado!=='cancelada'?`<button class="btn btn-sm btn-danger" data-imp-cancel="${o.id}">✗ Cancelar</button>`:''}
+        ${o.estado==='cancelada'?`<button class="btn btn-sm btn-secondary" data-imp-restore="${o.id}">↩ Restaurar</button>`:''}
+      </div></td>`:''}
+    </tr>`).join(''):`<tr><td colspan="10"><div class="empty">Sin órdenes</div></td></tr>`;
+  return `
+  <div class="ph">
+    <div class="ph-title">📋 Órdenes de Imprenta</div>
+    <div class="ph-sub">Historial completo — ${state.imp_orders.length} orden${state.imp_orders.length!==1?'es':''}</div>
+  </div>
+  <div class="content">
+    <div class="fb">
+      <input id="imp-fq" placeholder="Buscar cliente o producto..." value="${escHTML(fQ)}" style="min-width:180px"/>
+      <select id="imp-festado">
+        <option value="">Todos los estados</option>
+        <option value="pendiente"${fEstado==='pendiente'?' selected':''}>⏳ Pendiente</option>
+        <option value="enviada"${fEstado==='enviada'?' selected':''}>✓ Enviada</option>
+        <option value="cancelada"${fEstado==='cancelada'?' selected':''}>✗ Cancelada</option>
+      </select>
+      <span class="txt3" style="font-size:11px;margin-left:auto">${list.length} resultado${list.length!==1?'s':''}</span>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tw"><table>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th><th>Estado</th>${canEdit?'<th>Acciones</th>':''}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+    </div>
+  </div>`;
+}
+
 function renderAdminDashboard(){
   const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
   const active=state.productions.filter(p=>activeStatuses.includes(p.status))
