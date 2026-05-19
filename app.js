@@ -360,8 +360,7 @@ function renderPage(){
     case 'audit':            return state.user.role==='admin'?renderAudit():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'exportar':         return renderExportar();
     case 'imprenta':         return renderImprenta();
-    case 'imp-orders':       return renderImpOrders();
-    case 'admin-dashboard':  return state.user.role==='admin'?renderAdminDashboard():'<div class="content"><div class="empty">Acceso restringido</div></div>';
+    case 'imp-orders':       return renderImpOrders();    case 'admin-dashboard':  return state.user.role==='admin'?renderAdminDashboard():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     default:                 return renderDashboard();
   }
 }
@@ -662,7 +661,7 @@ function renderDashboard(){
     </div>
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:14px;font-family:var(--rajd)">Cola de Producción por Máquina</div>
     ${(() => {
-      const pendingImp = state.imp_orders.filter(o=>o.estado!=='enviada');
+      const pendingImp = state.imp_orders.filter(o=>o.estado==='pendiente');
       return pendingImp.length?`
     <div style="background:#fff;border:2px solid #0f1923;border-radius:12px;padding:0;overflow:hidden;margin-bottom:22px">
       <div style="background:#0f1923;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
