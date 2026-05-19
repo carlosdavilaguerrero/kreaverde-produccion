@@ -832,6 +832,10 @@ function renderProductionDetail(){
         <div class="field"><label>Cantidad Producida</label>
             <input id="det-qty" type="number" value="${prod.produced_qty||0}"${!canEdit?' disabled':''}/>
           </div>
+        ${state.user.role==='admin'?`
+        <div class="field"><label>Cantidad Objetivo <span style="font-size:9px;color:var(--red);letter-spacing:1px">SOLO ADMIN</span></label>
+          <input id="det-target" type="number" value="${prod.target_qty||0}"/>
+        </div>`:''}
         <div class="field"><label>Observaciones</label>
           <textarea id="det-obs"${!canEdit?' disabled':''}>${escHTML(prod.observations||'')}</textarea>
         </div>
@@ -1225,9 +1229,11 @@ function bindAll(){
     const newStatus=document.getElementById('det-status').value;
     const newQty=parseInt(document.getElementById('det-qty').value)||0;
     const newObs=document.getElementById('det-obs').value;
+    const newTarget=state.user.role==='admin'?(parseInt(document.getElementById('det-target')?.value)||prod.target_qty):prod.target_qty;
     const changes={};
     if(newStatus!==prod.status) changes.status={old:prod.status,new:newStatus};
     if(newQty!==prod.produced_qty) changes.produced_qty={old:prod.produced_qty,new:newQty};
+    if(newTarget!==prod.target_qty) changes.target_qty={old:prod.target_qty,new:newTarget};
 
     let mold_changes=[...(prod.mold_changes||[])];
     let start_time=prod.start_time, end_time=prod.end_time;
@@ -1236,7 +1242,7 @@ function bindAll(){
     if(prod.status==='pendiente'&&newStatus==='en_proceso') start_time=now();
     if(['completada','cancelada'].includes(newStatus)&&!prod.end_time) end_time=now();
 
-    const updated={...prod,status:newStatus,produced_qty:newQty,observations:newObs,mold_changes,start_time,end_time,
+    const updated={...prod,status:newStatus,produced_qty:newQty,target_qty:newTarget,observations:newObs,mold_changes,start_time,end_time,
       audit_log:[...(prod.audit_log||[]),{action:'Actualización',by:state.user.id,by_name:state.user.name,at:now(),changes,note:''}]};
     state.productions=state.productions.map(p=>p.id===state.selectedProdId?updated:p);
     DB.set('kv_productions',state.productions);
