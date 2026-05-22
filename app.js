@@ -73,6 +73,7 @@ let state = {
   tab: 'info',
   filters: {machine:'',status:'',shift:'',q:'',impEstado:'',impQ:''},
   imp: { cliente:'', producto:'', cantidad:'', material:'', materialOtro:'', tipo:'nueva', extrasOn:false, extras:0, imprenta:'', imprentaOtra:'' },
+  editingImp: null,
   imp_orders: []
 };
 
@@ -1428,6 +1429,59 @@ Imprenta: ${impLabel.toUpperCase()}`;
   document.getElementById('imp-fq')?.addEventListener('input',e=>{ state.filters.impQ=e.target.value; render(); });
   document.getElementById('imp-festado')?.addEventListener('change',e=>{ state.filters.impEstado=e.target.value; render(); });
 
+  /* EDITAR ORDEN IMPRENTA — abrir */
+  document.querySelectorAll('[data-imp-edit]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.impEdit;
+      const orden=state.imp_orders.find(o=>o.id===id);
+      if(!orden) return;
+      state.editingImp={...orden};
+      render();
+    });
+  });
+  /* EDITAR ORDEN IMPRENTA — toggles "Otro" */
+  document.getElementById('ie-material')?.addEventListener('change',function(){
+    const w=document.getElementById('ie-material-otro-wrap');
+    if(w) w.style.display=this.value==='Otro'?'flex':'none';
+  });
+  document.getElementById('ie-imprenta')?.addEventListener('change',function(){
+    const w=document.getElementById('ie-imprenta-otra-wrap');
+    if(w) w.style.display=this.value==='Otra'?'flex':'none';
+  });
+  /* EDITAR ORDEN IMPRENTA — cancelar */
+  document.getElementById('ie-cancel')?.addEventListener('click',()=>{ state.editingImp=null; render(); });
+  document.getElementById('imp-edit-overlay')?.addEventListener('click',e=>{
+    if(e.target.id==='imp-edit-overlay'){ state.editingImp=null; render(); }
+  });
+  /* EDITAR ORDEN IMPRENTA — guardar */
+  document.getElementById('ie-save')?.addEventListener('click',()=>{
+    const e=state.editingImp;
+    if(!e) return;
+    const cliente=document.getElementById('ie-cliente').value.trim();
+    const producto=document.getElementById('ie-producto').value;
+    const cant=parseInt(String(document.getElementById('ie-cantidad').value).replace(/\D/g,''))||0;
+    const tipo=document.getElementById('ie-tipo').value;
+    const matSel=document.getElementById('ie-material').value;
+    const matOtro=document.getElementById('ie-material-otro')?.value.trim()||'';
+    const impSel=document.getElementById('ie-imprenta').value;
+    const impOtra=document.getElementById('ie-imprenta-otra')?.value.trim()||'';
+    const extras=parseInt(document.getElementById('ie-extras').value)||0;
+    const material=matSel==='Otro'?matOtro:matSel;
+    const imprenta=impSel==='Otra'?impOtra:impSel;
+    if(!cliente||!producto||!cant||!material||!imprenta){ notify('error','Completa: Cliente, Producto, Cantidad, Material e Imprenta'); return; }
+    if(matSel==='Otro'&&!matOtro){ notify('error','Especifica el papel'); return; }
+    if(impSel==='Otra'&&!impOtra){ notify('error','Especifica la imprenta'); return; }
+    const troq=TROQUELES[producto]||null;
+    const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
+    const hojas=hojaBase+extras;
+    const upd={cliente,producto,cantidad:cant,material,tipo,imprenta,extras,hojas};
+    fetch(`${SB_URL}/rest/v1/kv_imprenta?id=eq.${encodeURIComponent(e.id)}`,{method:'PATCH',headers:{...SB_H,'Prefer':'return=minimal'},body:JSON.stringify(upd)}).catch(()=>{});
+    state.imp_orders=state.imp_orders.map(o=>o.id===e.id?{...o,...upd}:o);
+    state.editingImp=null;
+    notify('success','Orden actualizada');
+    render();
+  });
+
   /* CANCELAR ORDEN IMPRENTA */
   document.querySelectorAll('[data-imp-cancel]').forEach(el=>{
     el.addEventListener('click',()=>{
@@ -1785,6 +1839,7 @@ function renderImpOrders(){
       <td style="font-size:11px">${escHTML(o.imprenta||'')}</td>
       <td><span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':o.estado==='cancelada'?'#fdeaea':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':o.estado==='cancelada'?'#cc1f1f':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':o.estado==='cancelada'?'✗ Cancelada':'⏳ Pendiente'}</span></td>
       ${canEdit?`<td><div class="row" style="gap:5px;flex-wrap:nowrap">
+        ${o.estado==='pendiente'?`<button class="btn btn-sm btn-secondary" data-imp-edit="${o.id}">✎ Editar</button>`:''}
         ${o.estado==='pendiente'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Enviada</button>`:''}
         ${o.estado!=='cancelada'?`<button class="btn btn-sm btn-danger" data-imp-cancel="${o.id}">✗ Cancelar</button>`:''}
         ${o.estado==='cancelada'?`<button class="btn btn-sm btn-secondary" data-imp-restore="${o.id}">↩ Restaurar</button>`:''}
@@ -1811,6 +1866,75 @@ function renderImpOrders(){
         <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th><th>Estado</th>${canEdit?'<th>Acciones</th>':''}</tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
+    </div>
+    ${renderImpEditModal()}
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   MODAL EDITAR ORDEN DE IMPRENTA
+══════════════════════════════════════ */
+function renderImpEditModal(){
+  const e=state.editingImp;
+  if(!e) return '';
+  const matIsPreset=MATERIALES.includes(e.material);
+  const matSel = matIsPreset ? e.material : 'Otro';
+  const matOtro = matIsPreset ? '' : (e.material||'');
+  const impIsPreset=IMPRENTAS.includes(e.imprenta);
+  const impSel = impIsPreset ? e.imprenta : 'Otra';
+  const impOtra = impIsPreset ? '' : (e.imprenta||'');
+  const troq=TROQUELES[e.producto]||null;
+  const cant=parseInt(String(e.cantidad||'').replace(/\D/g,''))||0;
+  const extras=parseInt(e.extras)||0;
+  const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
+  const hojasCalc=hojaBase+extras;
+  return `
+  <div id="imp-edit-overlay" style="position:fixed;inset:0;background:rgba(15,25,35,.55);z-index:9000;display:flex;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto">
+    <div class="card" style="max-width:520px;width:100%;margin-top:20px">
+      <div class="row" style="margin-bottom:6px">
+        <div class="st" style="margin:0;color:var(--green)">✎ Editar Orden de Imprenta</div>
+        <div class="sp"></div>
+        <span style="font-size:11px;color:var(--txt3)">${escHTML(e.cliente||'')}</span>
+      </div>
+      <div class="fg">
+        <div class="fr">
+          <div class="field"><label>Cliente *</label><input id="ie-cliente" value="${escHTML(e.cliente||'')}"/></div>
+          <div class="field"><label>Producto *</label>
+            <select id="ie-producto">${PRODUCTOS_IMPRENTA.map(p=>`<option value="${escHTML(p)}"${e.producto===p?' selected':''}>${escHTML(p)}</option>`).join('')}</select>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>Cantidad (uds) *</label><input id="ie-cantidad" type="number" value="${cant||''}"/></div>
+          <div class="field"><label>Tipo</label>
+            <select id="ie-tipo">
+              <option value="nueva"${e.tipo==='nueva'?' selected':''}>Nueva</option>
+              <option value="reimpresion"${e.tipo==='reimpresion'?' selected':''}>Reimpresión</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Material / Papel *</label>
+          <select id="ie-material">${MATERIALES.map(m=>`<option value="${escHTML(m)}"${matSel===m?' selected':''}>${escHTML(m)}</option>`).join('')}</select>
+        </div>
+        <div class="field" id="ie-material-otro-wrap" style="display:${matSel==='Otro'?'flex':'none'}"><label>Especificar papel</label>
+          <input id="ie-material-otro" value="${escHTML(matOtro)}" placeholder="ej: 250g Brillo 70×50"/>
+        </div>
+        <div class="field"><label>Imprenta *</label>
+          <select id="ie-imprenta">${IMPRENTAS.map(i=>`<option value="${escHTML(i)}"${impSel===i?' selected':''}>${escHTML(i)}</option>`).join('')}</select>
+        </div>
+        <div class="field" id="ie-imprenta-otra-wrap" style="display:${impSel==='Otra'?'flex':'none'}"><label>Especificar imprenta</label>
+          <input id="ie-imprenta-otra" value="${escHTML(impOtra)}" placeholder="Nombre de la imprenta"/>
+        </div>
+        <div class="field"><label>Extras (hojas adicionales)</label><input id="ie-extras" type="number" value="${extras}"/></div>
+        <div style="padding:10px 14px;background:var(--raised);border-radius:6px;font-size:12px;color:var(--txt2)">
+          Hojas calculadas: <span class="mono" style="color:var(--green);font-weight:700">${hojasCalc.toLocaleString()}</span>
+          ${troq?`<span style="color:var(--txt3)"> · ${troq.units} uds/hoja${troq.note?' · '+escHTML(troq.note):''}</span>`:'<span style="color:var(--red)"> · producto sin troquel</span>'}
+          <div style="font-size:10px;color:var(--txt3);margin-top:3px">Se recalcula al guardar según producto, cantidad y extras.</div>
+        </div>
+        <div class="row">
+          <button class="btn btn-primary" id="ie-save">✓ Guardar Cambios</button>
+          <button class="btn btn-secondary" id="ie-cancel">Cancelar</button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
