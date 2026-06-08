@@ -311,7 +311,7 @@ function renderDashboard(){
   const dateStr=new Date().toLocaleDateString('es-EC',{weekday:'long',day:'numeric',month:'long'});
   const troquelActivas=state.troquelOrders.filter(t=>!['completada','cancelada'].includes(t.status));
 
-  const machCards=MACHINES.map(m=>{
+  const machCards=MACHINES.filter(m=>m.id!=='troqueladora').map(m=>{
     const active=state.productions.find(p=>p.machine_id===m.id&&p.status==='en_proceso');
     const cur=active||state.productions.find(p=>p.machine_id===m.id&&['pendiente','cambio_molde','pausada'].includes(p.status));
     const st=cur?STATUS[cur.status]:{label:'Sin actividad',color:'#c5cfde'};
@@ -749,11 +749,16 @@ function renderNewTroquel(){
         <input id="nt-marca" placeholder="ej: Mykonos, Zanzíbar..."/>
       </div>
     </div>
-    <div class="field"><label>Troquelador Responsable *</label>
-      <select id="nt-troquelador">
-        <option value="">Seleccionar persona</option>
-        ${operadores.length?operadores.map(u=>`<option value="${u.id}">${escHTML(u.name)}</option>`).join(''):'<option value="" disabled>No hay operadores/productores registrados</option>'}
-      </select>
+    <div class="fr">
+      <div class="field"><label>Troquelador Responsable *</label>
+        <select id="nt-troquelador">
+          <option value="">Seleccionar persona</option>
+          ${operadores.length?operadores.map(u=>`<option value="${u.id}">${escHTML(u.name)}</option>`).join(''):'<option value="" disabled>No hay operadores/productores registrados</option>'}
+        </select>
+      </div>
+      <div class="field"><label>Fecha de la Orden *</label>
+        <input id="nt-fecha" type="date" value="${new Date().toISOString().slice(0,10)}"/>
+      </div>
     </div>
     <div class="field"><label>Observaciones</label>
       <textarea id="nt-obs" placeholder="Instrucciones especiales, notas del pedido..."></textarea>
@@ -1010,6 +1015,8 @@ function bindAll(){
     if(material==='Otro'&&!materialOtro){err.textContent='Especifica el material';return;}
     if(tipo==='personalizado'&&!marca){err.textContent='Indica el nombre de la marca';return;}
     if(!troqueladorId){err.textContent='Selecciona el troquelador responsable';return;}
+    const fechaVal=document.getElementById('nt-fecha').value;
+    if(!fechaVal){err.textContent='Indica la fecha de la orden';return;}
     const tUser=state.users.find(u=>u.id===troqueladorId);
     const nt={
       id:'troq_'+uid(),client,product,qty,
@@ -1019,7 +1026,7 @@ function bindAll(){
       troquelador_id:troqueladorId,
       troquelador_name:tUser?tUser.name:troqueladorId,
       observations:document.getElementById('nt-obs').value,
-      created_by:state.user.id,created_at:now(),
+      created_by:state.user.id,created_at:new Date(fechaVal+'T12:00:00').toISOString(),
       audit_log:[{action:'Orden de troquelado creada',by:state.user.id,by_name:state.user.name,at:now(),changes:{},note:''}]
     };
     state.troquelOrders.push(nt);DB.set('kv_troquel',state.troquelOrders);
