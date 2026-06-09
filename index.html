@@ -825,7 +825,7 @@ function renderDashboard(){
       </div>
     </div>
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:14px;font-family:var(--rajd)">Cola de Producción por Máquina</div>
-    ${(()=>{ const pendientes=state.imp_orders.filter(o=>o.estado!=='enviada'); return pendientes.length?`
+    ${(()=>{ const pendientes=state.imp_orders.filter(o=>o.estado!=='enviada'&&o.estado!=='cancelada'); return pendientes.length?`
     <div style="background:#fff;border:2px solid #0f1923;border-radius:12px;padding:0;overflow:hidden;margin-bottom:22px">
       <div style="background:#0f1923;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
         <div style="font-family:var(--rajd);font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676">🖨 ÓRDENES DE IMPRENTA</div>
@@ -839,7 +839,10 @@ function renderDashboard(){
           <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span> ${(o.cantidad||0).toLocaleString()} uds</td>
           <td class="mono" style="font-weight:700;font-size:16px">${(o.hojas||0).toLocaleString()}</td>
           <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:#fff3cd;color:#b86e00">⏳ Pendiente</span></td>
-          ${(state.user.role==='admin'||state.user.role==='producer')?`<td><button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button></td>`:''}
+          ${(state.user.role==='admin'||state.user.role==='producer')?`<td><div class="row">
+            <button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Enviada</button>
+            <button class="btn btn-sm btn-danger" data-imp-cancel="${o.id}">✗ Cancelar</button>
+          </div></td>`:''}
         </tr>`).join('')}
         </tbody>
       </table></div>
@@ -1579,6 +1582,22 @@ Imprenta: ${impLabel.toUpperCase()}`;
     render();
   });
 
+  /* CANCELAR ORDEN IMPRENTA */
+  document.querySelectorAll('[data-imp-cancel]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const id=el.dataset.impCancel;
+      if(!confirm('¿Cancelar esta orden de imprenta?')) return;
+      fetch(`${SB_URL}/rest/v1/kv_imprenta?id=eq.${encodeURIComponent(id)}`,{
+        method:'PATCH',
+        headers:{...SB_H,'Prefer':'return=minimal'},
+        body:JSON.stringify({estado:'cancelada'})
+      }).catch(()=>{});
+      state.imp_orders=state.imp_orders.map(o=>o.id===id?{...o,estado:'cancelada'}:o);
+      notify('success','Orden cancelada');
+      render();
+    });
+  });
+
   /* MARCAR ORDEN IMPRENTA COMO ENVIADA */
   document.querySelectorAll('[data-imp-send]').forEach(el=>{
     el.addEventListener('click',()=>{
@@ -2262,16 +2281,21 @@ function renderTroquelDetail(){
 ══════════════════════════════════════ */
 function renderImpOrdenes(){
   const todas=state.imp_orders.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-  const pendientes=todas.filter(o=>o.estado!=='enviada');
+  const pendientes=todas.filter(o=>o.estado!=='enviada'&&o.estado!=='cancelada');
   const enviadas=todas.filter(o=>o.estado==='enviada');
+  const canceladas=todas.filter(o=>o.estado==='cancelada');
 
   const filaOrdenes=(lista,mostrarAccion)=>lista.length?lista.map(o=>`<tr>
     <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
     <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}<br><span style="font-size:10px;color:#7a8fa8;font-weight:400">${escHTML(o.producto)} · ${escHTML(o.material)} · ${escHTML(o.imprenta)}</span></td>
     <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span> ${(o.cantidad||0).toLocaleString()} uds</td>
     <td class="mono" style="font-weight:700;font-size:16px">${(o.hojas||0).toLocaleString()}</td>
-    <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':'⏳ Pendiente'}</span></td>
-    ${mostrarAccion?`<td>${o.estado!=='enviada'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button>`:'—'}</td>`:''}
+    <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':o.estado==='cancelada'?'#fdeaea':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':o.estado==='cancelada'?'#cc1f1f':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':o.estado==='cancelada'?'✗ Cancelada':'⏳ Pendiente'}</span></td>
+    ${mostrarAccion?`<td>${o.estado==='pendiente'||!o.estado?`
+      <div class="row">
+        <button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Enviada</button>
+        <button class="btn btn-sm btn-danger" data-imp-cancel="${o.id}">✗ Cancelar</button>
+      </div>`:'—'}</td>`:''}
   </tr>`).join(''):`<tr><td colspan="6"><div class="empty">Sin órdenes</div></td></tr>`;
 
   const canAct=state.user.role==='admin'||state.user.role==='producer';
@@ -2297,12 +2321,21 @@ function renderImpOrdenes(){
     </div>`:''}
 
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">✓ Enviadas (${enviadas.length})</div>
-    <div class="card" style="padding:0;overflow:hidden">
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:28px">
       <div class="tw"><table>
         <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th></tr></thead>
         <tbody>${filaOrdenes(enviadas,false)}</tbody>
       </table></div>
     </div>
+
+    ${canceladas.length?`
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">✗ Canceladas (${canceladas.length})</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tw"><table>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th></tr></thead>
+        <tbody>${filaOrdenes(canceladas,false)}</tbody>
+      </table></div>
+    </div>`:''}
   </div>`;
 }
 
