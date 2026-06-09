@@ -482,6 +482,7 @@ function renderSidebar(){
     ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
     {id:'exportar',label:'Exportar/Importar',icon:'⇅'},
     ...(u.role==='admin'?[{id:'imprenta',label:'Orden Imprenta',icon:'🖨'}]:[]),
+    {id:'imp-ordenes',label:'Órdenes Imprenta',icon:'📋'},
     {id:'troquel',label:'Troqueladora',icon:'✂'},
     ...(u.role!=='operator'?[{id:'new-troquel',label:'Nueva Troquel',icon:'◇'}]:[]),
     ...(u.role==='admin'?[{id:'admin-dashboard',label:'Panel Admin',icon:'★'}]:[])
@@ -520,6 +521,7 @@ function renderPage(){
     case 'audit':            return state.user.role==='admin'?renderAudit():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'exportar':         return renderExportar();
     case 'imprenta':         return renderImprenta();
+    case 'imp-ordenes':      return renderImpOrdenes();
     case 'troquel':          return renderTroquelList();
     case 'new-troquel':      return (state.user.role!=='operator')?renderNewTroquel():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'troquel-detail':   return renderTroquelDetail();
@@ -2252,6 +2254,55 @@ function renderTroquelDetail(){
       ${state.user.role==='admin'?`<div class="tab${tab==='audit'?' active':''}" data-tab="audit">Auditoría (${t.audit_log?.length||0})</div>`:''}
     </div>
     ${tabInfo}${tabAudit}
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   ÓRDENES IMPRENTA — HISTORIAL COMPLETO
+══════════════════════════════════════ */
+function renderImpOrdenes(){
+  const todas=state.imp_orders.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const pendientes=todas.filter(o=>o.estado!=='enviada');
+  const enviadas=todas.filter(o=>o.estado==='enviada');
+
+  const filaOrdenes=(lista,mostrarAccion)=>lista.length?lista.map(o=>`<tr>
+    <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
+    <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}<br><span style="font-size:10px;color:#7a8fa8;font-weight:400">${escHTML(o.producto)} · ${escHTML(o.material)} · ${escHTML(o.imprenta)}</span></td>
+    <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span> ${(o.cantidad||0).toLocaleString()} uds</td>
+    <td class="mono" style="font-weight:700;font-size:16px">${(o.hojas||0).toLocaleString()}</td>
+    <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':'⏳ Pendiente'}</span></td>
+    ${mostrarAccion?`<td>${o.estado!=='enviada'?`<button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Marcar Enviada</button>`:'—'}</td>`:''}
+  </tr>`).join(''):`<tr><td colspan="6"><div class="empty">Sin órdenes</div></td></tr>`;
+
+  const canAct=state.user.role==='admin'||state.user.role==='producer';
+
+  return `
+  <div class="ph">
+    <div class="row" style="flex-wrap:nowrap">
+      <div style="flex:1">
+        <div class="ph-title">📋 Órdenes de Imprenta</div>
+        <div class="ph-sub">Historial completo — ${todas.length} orden${todas.length!==1?'es':''} · ${pendientes.length} pendiente${pendientes.length!==1?'s':''} · ${enviadas.length} enviada${enviadas.length!==1?'s':''}</div>
+      </div>
+      ${state.user.role==='admin'?`<button class="btn btn-primary" data-page="imprenta">+ Nueva Orden</button>`:''}
+    </div>
+  </div>
+  <div class="content">
+    ${pendientes.length?`
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">⏳ Pendientes (${pendientes.length})</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:28px">
+      <div class="tw"><table>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th>${canAct?'<th>Acción</th>':''}</tr></thead>
+        <tbody>${filaOrdenes(pendientes,canAct)}</tbody>
+      </table></div>
+    </div>`:''}
+
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">✓ Enviadas (${enviadas.length})</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="tw"><table>
+        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th></tr></thead>
+        <tbody>${filaOrdenes(enviadas,false)}</tbody>
+      </table></div>
+    </div>
   </div>`;
 }
 
