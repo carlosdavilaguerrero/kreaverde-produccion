@@ -208,7 +208,7 @@ const TROQUEL_STATUS={
   completada: {label:'Completada', color:'#2979ff'},
   cancelada:  {label:'Cancelada',  color:'#ef4444'}
 };
-const TROQUEL_MATERIALS=['Polipropileno (PP)','Polietileno (PE)','Poliestireno (PS)','PET','PVC','Cartón','Papel kraft','Aluminio','Otro'];
+const TROQUEL_MATERIALS=['230g Mate 72×50','230g Mate 58×50','280g Mate 72×50','Otro'];
 const nonAdminUsers=()=>state.users.filter(u=>u.status==='approved'&&u.role!=='admin');
 
 const ADMIN_USER = {id:'usr_carlos',username:'carlos',password:'1808',name:'Carlos Dávila',role:'admin',status:'approved',created_at:new Date().toISOString()};
