@@ -2140,12 +2140,15 @@ const troquelBadge=s=>{const st=TROQUEL_STATUS[s]||{label:s,color:'#64748b'};ret
 /* TROQUELADORA — LISTA */
 function renderTroquelList(){
   const {status:fStat,q}=state.troquelFilters;
-  const list=state.troquelOrders.filter(t=>{
+  const all=state.troquelOrders.filter(t=>{
     if(fStat&&t.status!==fStat)return false;
     if(q&&!(t.client||'').toLowerCase().includes(q.toLowerCase())&&!(t.product||'').toLowerCase().includes(q.toLowerCase()))return false;
     return true;
   }).slice().reverse();
-  const rows=list.length?list.map(t=>`
+  const esHistorial=t=>t.status==='completada'||t.status==='cancelada';
+  const activas=all.filter(t=>!esHistorial(t));
+  const historial=all.filter(esHistorial);
+  const rowTpl=t=>`
     <tr class="clickable" data-open-troquel="${t.id}">
       <td style="font-weight:700">${escHTML(t.client||'—')}</td>
       <td>${escHTML(t.product||'—')}</td>
@@ -2155,7 +2158,9 @@ function renderTroquelList(){
       <td style="font-size:11px;color:var(--txt2)">${escHTML(t.material||'—')}${t.material==='Otro'&&t.material_otro?' · '+escHTML(t.material_otro):''}</td>
       <td>${t.tipo==='personalizado'?`<span style="color:var(--amber);font-size:11px;font-weight:700">PERS · ${escHTML(t.marca||'')}</span>`:'<span style="color:var(--txt3);font-size:11px">Blanco</span>'}</td>
       <td style="font-size:10px;color:var(--txt3)">${fmt(t.created_at)}</td>
-    </tr>`).join(''):`<tr><td colspan="8"><div class="empty">Sin órdenes que coincidan</div></td></tr>`;
+    </tr>`;
+  const activasRows=activas.length?activas.map(rowTpl).join(''):`<tr><td colspan="8"><div class="empty">Sin órdenes activas</div></td></tr>`;
+  const histRows=historial.map(rowTpl).join('');
   return `
   <div class="ph">
     <div class="row" style="flex-wrap:nowrap">
@@ -2173,14 +2178,23 @@ function renderTroquelList(){
         <option value="">Todos los estados</option>
         ${Object.entries(TROQUEL_STATUS).map(([k,v])=>`<option value="${k}"${fStat===k?' selected':''}>${escHTML(v.label)}</option>`).join('')}
       </select>
-      <span class="txt3" style="font-size:11px;margin-left:auto">${list.length} resultado${list.length!==1?'s':''}</span>
+      <span class="txt3" style="font-size:11px;margin-left:auto">${all.length} resultado${all.length!==1?'s':''}</span>
     </div>
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:10px;font-family:var(--rajd)">Órdenes Activas (${activas.length})</div>
+    <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
+      <div class="tw"><table>
+        <thead><tr><th>Cliente</th><th>Producto</th><th>Estado</th><th>Troquelador</th><th>Cant. Papel</th><th>Material</th><th>Tipo</th><th>Fecha</th></tr></thead>
+        <tbody>${activasRows}</tbody>
+      </table></div>
+    </div>
+    ${historial.length?`
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:10px;font-family:var(--rajd)">✓ Historial — Completadas / Canceladas (${historial.length})</div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="tw"><table>
         <thead><tr><th>Cliente</th><th>Producto</th><th>Estado</th><th>Troquelador</th><th>Cant. Papel</th><th>Material</th><th>Tipo</th><th>Fecha</th></tr></thead>
-        <tbody>${rows}</tbody>
+        <tbody>${histRows}</tbody>
       </table></div>
-    </div>
+    </div>`:''}
   </div>`;
 }
 
