@@ -962,6 +962,8 @@ function renderProductions(){
    NEW PRODUCTION
 ══════════════════════════════════════ */
 function renderNewProduction(){
+  const troqOps=nonAdminUsers();
+  const hoyISO=new Date().toISOString().slice(0,10);
   return `
   <div class="ph">
     <div class="ph-title">Nueva Producción</div>
@@ -1000,6 +1002,33 @@ function renderNewProduction(){
           </div>
           <div class="field" id="np-marca-wrap" style="display:none"><label>Nombre de Marca *</label>
             <input id="np-marca" placeholder="ej: Mykonos, Zanzíbar..."/>
+          </div>
+        </div>
+        <div id="np-troq-wrap" style="display:none">
+          <div class="fr">
+            <div class="field"><label>Cliente *</label>
+              <input id="np-cliente" placeholder="Nombre del cliente"/>
+            </div>
+            <div class="field"><label>Material *</label>
+              <select id="np-material">
+                <option value="">Seleccionar material</option>
+                ${TROQUEL_MATERIALS.map(mt=>`<option value="${escHTML(mt)}">${escHTML(mt)}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="field" id="np-material-otro-wrap" style="display:none"><label>¿Cuál material? *</label>
+            <input id="np-material-otro" placeholder="Escribe el material"/>
+          </div>
+          <div class="fr">
+            <div class="field"><label>Troquelador Responsable *</label>
+              <select id="np-troquelador">
+                <option value="">Seleccionar persona</option>
+                ${troqOps.length?troqOps.map(u=>`<option value="${u.id}">${escHTML(u.name)}</option>`).join(''):'<option value="" disabled>No hay operadores/productores registrados</option>'}
+              </select>
+            </div>
+            <div class="field"><label>Fecha de la Orden *</label>
+              <input id="np-fecha" type="date" value="${hoyISO}"/>
+            </div>
           </div>
         </div>
         <div class="field"><label>Observaciones</label>
@@ -1056,6 +1085,14 @@ function renderProductionDetail(){
             ${prod.tipo==='personalizado'?'<span style="color:var(--amber);font-family:var(--rajd);font-weight:700;font-size:14px">PERSONALIZADO</span><span style="color:var(--txt2);font-size:13px;margin-left:6px">· '+escHTML(prod.marca||'')+'</span>':'<span style="color:var(--txt2);font-family:var(--rajd);font-weight:700;font-size:14px">BLANCO</span>'}
           </div>
           <div class="st">Métricas</div>
+          ${prod.machine_id==='troqueladora'&&(prod.client||prod.troquelador_name||prod.material||prod.fecha_orden)?`
+          <div style="margin:0 0 14px;padding:12px 14px;background:rgba(156,39,176,.06);border:1px solid rgba(156,39,176,.25);border-radius:8px;display:flex;flex-direction:column;gap:8px">
+            <div style="font-family:var(--rajd);font-size:11px;font-weight:700;letter-spacing:1.5px;color:#9c27b0">DATOS DE TROQUELADO</div>
+            ${prod.client?`<div style="font-size:13px"><span class="lbl">Cliente:</span> <strong>${escHTML(prod.client)}</strong></div>`:''}
+            ${prod.material?`<div style="font-size:13px"><span class="lbl">Material:</span> ${escHTML(prod.material)}${prod.material==='Otro'&&prod.material_otro?' · '+escHTML(prod.material_otro):''}</div>`:''}
+            ${prod.troquelador_name?`<div style="font-size:13px"><span class="lbl">Troquelador:</span> ${escHTML(prod.troquelador_name)}</div>`:''}
+            ${prod.fecha_orden?`<div style="font-size:13px"><span class="lbl">Fecha de la orden:</span> ${escHTML(prod.fecha_orden)}</div>`:''}
+          </div>`:''}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div><div class="mono" style="font-size:28px;color:var(--green)">${(prod.produced_qty||0).toLocaleString()}</div><div class="lbl">Producido</div></div>
             <div><div class="mono" style="font-size:28px;color:var(--txt2)">${(prod.target_qty||0).toLocaleString()}</div><div class="lbl">Objetivo</div></div>
@@ -1374,8 +1411,14 @@ function bindAll(){
   document.getElementById('np-mach')?.addEventListener('change',function(){
     const m=MACHINES.find(x=>x.id===this.value);
     const ps=document.getElementById('np-prod');
+    const tw=document.getElementById('np-troq-wrap');
+    if(tw) tw.style.display=this.value==='troqueladora'?'block':'none';
     if(!m){ ps.innerHTML='<option value="">Primero selecciona máquina</option>'; return; }
     ps.innerHTML='<option value="">Seleccionar producto</option>'+m.products.map(p=>`<option value="${escHTML(p)}">${escHTML(p)}</option>`).join('');
+  });
+  document.getElementById('np-material')?.addEventListener('change',function(){
+    const w=document.getElementById('np-material-otro-wrap');
+    if(w) w.style.display=this.value==='Otro'?'block':'none';
   });
   document.getElementById('np-save')?.addEventListener('click',()=>{
     const mid=document.getElementById('np-mach').value;
@@ -1384,14 +1427,32 @@ function bindAll(){
     const err=document.getElementById('np-err');
     const tipo=document.getElementById('np-tipo').value;
     const marca=document.getElementById('np-marca')?.value.trim()||'';
-    if(!mid||!prod||!qty){ err.textContent='Completa: Máquina, Producto y Cantidad Objetivo'; return; }
-    if(tipo==='personalizado'&&!marca){ err.textContent='Indica el nombre de la marca'; return; }
+    if(!mid||!prod||!qty){ err.textContent='Completa: Máquina, Producto y Cantidad Objetivo'; notify('error','Faltan datos: Máquina, Producto y Cantidad'); return; }
+    if(tipo==='personalizado'&&!marca){ err.textContent='Indica el nombre de la marca'; notify('error','Indica el nombre de la marca'); return; }
+    const esTroq=mid==='troqueladora';
+    const cliente=document.getElementById('np-cliente')?.value.trim()||'';
+    let material=document.getElementById('np-material')?.value||'';
+    const materialOtro=document.getElementById('np-material-otro')?.value.trim()||'';
+    const troqSel=document.getElementById('np-troquelador');
+    const troqId=troqSel?troqSel.value:'';
+    const troqName=troqId?(state.users.find(u=>u.id===troqId)||{}).name||'':'';
+    const fechaOrden=document.getElementById('np-fecha')?.value||'';
+    if(esTroq){
+      if(!cliente||!material||!troqId||!fechaOrden){ err.textContent='Completa: Cliente, Material, Troquelador y Fecha'; notify('error','Faltan datos de troquelado: Cliente, Material, Troquelador y Fecha'); return; }
+      if(material==='Otro'&&!materialOtro){ err.textContent='Indica cuál es el material'; notify('error','Indica cuál es el material'); return; }
+    }
     const np={
       id:'prod_'+uid(), machine_id:mid, product:prod,
       tipo:tipo, marca:tipo==='personalizado'?marca:'',
       status:'pendiente', shift:document.getElementById('np-shift').value,
       target_qty:qty, produced_qty:0,
       unit_price:0,
+      client: esTroq?cliente:'',
+      material: esTroq?material:'',
+      material_otro: esTroq&&material==='Otro'?materialOtro:'',
+      troquelador_id: esTroq?troqId:'',
+      troquelador_name: esTroq?troqName:'',
+      fecha_orden: esTroq?fechaOrden:'',
       observations:document.getElementById('np-obs').value,
       damages:[], mold_changes:[], start_time:null, end_time:null,
       created_by:state.user.id, created_at:now(),
