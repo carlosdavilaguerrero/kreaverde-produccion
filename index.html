@@ -17,23 +17,13 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14p
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:#e8ecf2}
 ::-webkit-scrollbar-thumb{background:#b0bfce;border-radius:3px}
+
+/* LAYOUT */
 .app{display:flex;min-height:100vh}
 .sidebar{width:230px;flex-shrink:0;background:#1a2535;border-right:1px solid #0f1923;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
 .main{flex:1;margin-left:230px;min-height:100vh;overflow-x:hidden}
-@media(max-width:768px){
-  .sidebar{display:none}
-  .main{margin-left:0;padding-bottom:70px}
-  .ph{padding:16px 14px 12px}
-  .content{padding:0 12px 80px}
-  .fr{grid-template-columns:1fr!important}
-  .info-grid{grid-template-columns:1fr!important}
-  .stats{grid-template-columns:1fr 1fr!important}
-  .grid4{grid-template-columns:1fr!important}
-  th,td{padding:8px 8px!important;font-size:11px!important}
-  .tw{font-size:11px}
-  .ph-title{font-size:20px!important}
-  .btn{font-size:12px;padding:8px 13px}
-}
+
+/* SIDEBAR */
 .sb-logo{padding:22px 20px 16px;border-bottom:1px solid var(--border);font-family:var(--rajd);font-size:20px;font-weight:700;letter-spacing:2px;color:var(--green)}
 .sb-logo small{color:#7a8fa8;font-weight:400;font-size:10px;display:block;letter-spacing:3px;margin-top:3px}
 .sb-nav{flex:1;padding:10px 0;border-top:1px solid #253548}
@@ -42,22 +32,32 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14p
 .sb-item.active{color:#00e676;background:rgba(0,230,118,.1);border-left-color:#00e676}
 .sb-icon{font-size:16px;width:22px;text-align:center;flex-shrink:0}
 .sb-user{padding:16px;border-top:1px solid #253548}
+.sb-user-name{font-family:var(--rajd);font-size:15px;font-weight:600;color:#dde8f5}
+.sb-role{display:inline-block;margin-top:5px;padding:2px 9px;border-radius:3px;font-size:10px;letter-spacing:1.5px;font-weight:700;background:rgba(0,230,118,.15);color:#00e676}
 .sb-logout{margin-top:11px;width:100%;padding:8px;background:rgba(255,61,61,.12);border:1px solid rgba(255,61,61,.3);color:#ff7070;border-radius:5px;cursor:pointer;font-size:12px;font-family:var(--rajd);letter-spacing:.5px;transition:all .15s}
 .sb-logout:hover{background:rgba(255,61,61,.25)}
+
+/* TOP BAR */
 .topbar{background:#1a2535;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;position:sticky;top:0;z-index:200}
 .topbar-logo{font-family:var(--rajd);font-size:18px;font-weight:700;letter-spacing:2px;color:#00e676;line-height:1.1}
 .topbar-logo small{display:block;font-size:9px;letter-spacing:3px;color:#7a8fa8;font-weight:400}
 .topbar-user{display:flex;align-items:center;gap:8px}
 .topbar-avatar{width:32px;height:32px;border-radius:50%;background:rgba(0,230,118,.15);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#00e676;font-family:var(--rajd)}
+
+/* BOTTOM NAV */
 .bottom-nav{background:#1a2535;display:flex;border-top:1px solid #253548;position:fixed;bottom:0;left:0;right:0;z-index:200}
 .bn-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px;cursor:pointer;transition:all .15s;user-select:none}
 .bn-icon{font-size:18px;color:#8fa8c2}
 .bn-lbl{font-size:9px;color:#8fa8c2;font-family:var(--rajd);letter-spacing:.3px}
 .bn-item.active .bn-icon,.bn-item.active .bn-lbl{color:#00e676}
+
+/* PAGE HEADER */
 .ph{padding:26px 32px 18px;border-bottom:1px solid var(--border);margin-bottom:26px}
 .ph-title{font-family:var(--rajd);font-size:27px;font-weight:700;letter-spacing:1px}
 .ph-sub{font-size:12px;color:var(--txt2);margin-top:5px}
 .content{padding:0 32px 60px}
+
+/* CARDS */
 .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:22px;margin-bottom:18px}
 .grid4{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:28px}
 .mc{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s;cursor:pointer}
@@ -66,14 +66,22 @@ body{background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14p
 .mc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .mc-name{font-family:var(--rajd);font-size:15px;font-weight:600;letter-spacing:.5px;flex:1}
 .mc-b{padding:15px 16px}
+
+/* STATS */
 .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:13px;margin-bottom:28px}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:17px}
 .stat-n{font-family:var(--mono);font-size:28px;color:var(--green)}
 .stat-l{font-size:10px;color:var(--txt2);margin-top:5px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--rajd)}
+
+/* PROGRESS */
 .pbar{height:4px;background:#dde3ec;border-radius:2px;margin:10px 0;overflow:hidden}
 .pfill{height:100%;border-radius:2px;transition:width .5s}
+
+/* BADGE */
 .badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:700;letter-spacing:.8px;font-family:var(--rajd)}
 .badge::before{content:'●';font-size:7px}
+
+/* TABLE */
 .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
 thead{border-bottom:1px solid var(--border2)}
@@ -81,6 +89,8 @@ th{padding:9px 12px;text-align:left;font-family:var(--rajd);font-size:10px;font-
 td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:hover td{background:rgba(26,95,212,.04)}
 tr.clickable{cursor:pointer}
+
+/* FORM */
 .fg{display:flex;flex-direction:column;gap:16px}
 .fr{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .field{display:flex;flex-direction:column;gap:6px}
@@ -89,6 +99,8 @@ tr.clickable{cursor:pointer}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
 .field select option{background:#ffffff;color:#0f1923}
 .field textarea{resize:vertical;min-height:80px}
+
+/* BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:6px;border:none;font-family:var(--rajd);font-size:14px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s;text-decoration:none}
 .btn-primary{background:var(--green);color:#051409}
 .btn-primary:hover{background:#00ff85}
@@ -100,16 +112,22 @@ tr.clickable{cursor:pointer}
 .btn-approve{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);color:var(--green)}
 .btn-approve:hover{background:rgba(0,230,118,.2)}
 .btn-warn{background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.3);color:var(--amber)}
+
+/* AUTH */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#edf0f5;background-image:radial-gradient(circle at 25% 50%,rgba(0,146,61,.06) 0%,transparent 50%),radial-gradient(circle at 75% 20%,rgba(26,95,212,.06) 0%,transparent 50%)}
 .auth-box{width:390px;background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:38px 34px}
 .auth-logo{font-family:var(--rajd);font-size:22px;font-weight:700;color:var(--green);margin-bottom:24px;letter-spacing:2px}
 .auth-logo small{color:#6a8aaa;font-size:10px;font-weight:400;display:block;letter-spacing:3px;margin-top:3px}
 .auth-title{font-family:var(--rajd);font-size:25px;font-weight:700;margin-bottom:5px}
 .auth-sub{font-size:12px;color:var(--txt2);margin-bottom:28px}
+
+/* TABS */
 .tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:18px;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tab{padding:9px 14px;cursor:pointer;font-family:var(--rajd);font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid transparent;color:var(--txt2);transition:all .15s;user-select:none;white-space:nowrap}
 .tab:hover{color:var(--txt)}
 .tab.active{color:var(--green);border-bottom-color:var(--green)}
+
+/* MISC */
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .sp{flex:1}
 .mono{font-family:var(--mono)}
@@ -121,30 +139,46 @@ tr.clickable{cursor:pointer}
 .st{font-family:var(--rajd);font-size:12px;font-weight:700;letter-spacing:2px;color:var(--txt2);margin-bottom:13px;text-transform:uppercase}
 .divider{border:none;border-top:1px solid var(--border);margin:18px 0}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
+/* AUDIT */
 .audit-e{padding:12px 15px;border-left:3px solid var(--border2);margin-bottom:8px;background:#f5f8fb;border-radius:0 6px 6px 0}
 .audit-who{font-family:var(--rajd);font-size:13px;font-weight:700;color:var(--green)}
 .audit-act{font-size:12px;color:var(--txt2);margin-top:3px}
 .audit-time{font-size:11px;color:var(--txt3)}
+
+/* NOTIF */
 .notif{position:fixed;top:20px;right:20px;z-index:9999;padding:14px 22px;border-radius:8px;font-family:var(--rajd);font-size:14px;font-weight:700;border-left:4px solid;box-shadow:0 8px 32px rgba(0,0,0,.5);animation:slideIn .3s ease;pointer-events:none}
 @keyframes slideIn{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
 .notif-success{background:#e6f9ee;border-color:var(--green);color:#0f3d20}
 .notif-error{background:#fdeaea;border-color:var(--red);color:#5c0f0f}
+
+/* FILTER */
 .fb{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
 .fb select,.fb input{background:#f8fafc;border:1px solid var(--border2);border-radius:5px;padding:8px 13px;color:var(--txt);font-size:12px;outline:none;font-family:var(--sans)}
 .fb select:focus,.fb input:focus{border-color:var(--green)}
+
+/* PULSE */
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
 .pulse{animation:pulse 2s infinite}
 @keyframes kvpulse{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* PENDING PAGE */
 .pending-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#edf0f5}
+
+/* TAG */
 .tag{padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;font-family:var(--rajd);letter-spacing:1px}
+
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:900px){.info-grid{grid-template-columns:1fr}.fr{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
+
 <div id="app"></div>
 <div id="notif"></div>
-<script>
 
+<script>
 /* ══════════════════════════════════════
    CONFIG
 ══════════════════════════════════════ */
@@ -173,45 +207,17 @@ const SHIFTS = [
 
 const DAMAGE_TYPES = ['Deformación','Color irregular','Rebaba excesiva','Fuga de material','Rotura de molde','Problema de sellado','Dimensión fuera de especificación','Otro'];
 
-const TROQUELES = {
-  'Tarrinas 32oz': { units:4,  note:'+ 2 uds de 5oz por hoja' },
-  'Tarrinas 24oz': { units:6,  note:'' },
-  'Tarrinas 16oz': { units:8,  note:'' },
-  'Tarrinas 12oz': { units:10, note:'' },
-  'Tarrinas 10oz': { units:8,  note:'+ 2 uds de 5oz por hoja' },
-  'Tarrinas 7oz':  { units:10, note:'' },
-  'Tarrinas 5oz':  { units:12, note:'' },
-  'Tarrinas 4oz':  { units:18, note:'' },
-  'Vasos 16oz':    { units:6,  note:'' },
-  'Vasos 12oz':    { units:6,  note:'' },
-  'Vasos 8oz':     { units:12, note:'' },
-  'Vasos 8oz Vending':{ units:12, note:'' },
-  'Vasos 6oz':     { units:12, note:'' },
-  'Vasos 4oz':     { units:20, note:'' },
-  'Vasos 2oz':     { units:20, note:'' },
-};
-
-const MATERIALES = ['230g Mate 72×50','230g Mate 58×50','280g Mate 72×50','Otro'];
-const IMPRENTAS  = ['Gráficas Astudillo','Grafinsa','Imprenta Harrys','Otra'];
-
-const PRODUCTOS_IMPRENTA = [
-  'Tarrinas 32oz','Tarrinas 24oz','Tarrinas 16oz','Tarrinas 12oz',
-  'Tarrinas 10oz','Tarrinas 7oz','Tarrinas 5oz','Tarrinas 4oz',
-  'Vasos 16oz','Vasos 12oz','Vasos 8oz','Vasos 8oz Vending',
-  'Vasos 6oz','Vasos 4oz','Vasos 2oz'
-];
-
-const TROQUEL_STATUS={
-  pendiente:  {label:'Pendiente',  color:'#64748b'},
-  en_proceso: {label:'En Proceso', color:'#9c27b0'},
-  pausada:    {label:'Pausada',    color:'#ff6d00'},
-  completada: {label:'Completada', color:'#2979ff'},
-  cancelada:  {label:'Cancelada',  color:'#ef4444'}
-};
-const TROQUEL_MATERIALS=['230g Mate 72×50','230g Mate 58×50','280g Mate 72×50','Otro'];
-const nonAdminUsers=()=>state.users.filter(u=>u.status==='approved'&&u.role!=='admin');
-
 const ADMIN_USER = {id:'usr_carlos',username:'carlos',password:'1808',name:'Carlos Dávila',role:'admin',status:'approved',created_at:new Date().toISOString()};
+
+/* ══════════════════════════════════════
+   AVISO AL COMPLETAR UNA ORDEN
+   ↓↓↓  CAMBIA AQUÍ TU NÚMERO / CORREO  ↓↓↓
+══════════════════════════════════════ */
+const NOTIFY = {
+  metodo: 'whatsapp',            // 'whatsapp'  |  'email'  |  'both'
+  whatsapp: '593984131218',      // TU NÚMERO con código de país, SIN + ni espacios (Ecuador: 593 + número sin el 0 inicial)
+  email: 'carlos@kreaverde.com'  // TU CORREO (solo se usa si metodo es 'email' o 'both')
+};
 
 /* ══════════════════════════════════════
    STATE
@@ -225,86 +231,21 @@ let state = {
   authPage: 'login',
   tab: 'info',
   filters: {machine:'',status:'',shift:'',q:''},
-  imp: { cliente:'', producto:'', cantidad:'', material:'', materialOtro:'', tipo:'nueva', extrasOn:false, extras:0, imprenta:'', imprentaOtra:'' },
-  imp_orders: [],
-  troquelOrders: [],
-  selectedTroquelId: null,
-  troquelFilters: {status:'',q:''}
 };
 
 /* ══════════════════════════════════════
-   SUPABASE
+   STORAGE
 ══════════════════════════════════════ */
-const SB_URL = 'https://qnbobqlqldwcidadgbkh.supabase.co';
-const SB_KEY = 'sb_publishable_DJKuLqz6CqdFFlKr7070Ng_Ij4U9yio';
-const SB_H   = {'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':'application/json'};
-
-let _cachedProds = [];
-
-async function sbFetch(table, qs=''){
-  const r = await fetch(`${SB_URL}/rest/v1/${table}?select=*${qs}`,{headers:SB_H});
-  return r.ok ? r.json() : [];
-}
-async function sbUpsert(table, data){
-  await fetch(`${SB_URL}/rest/v1/${table}`,{
-    method:'POST',
-    headers:{...SB_H,'Prefer':'resolution=merge-duplicates,return=minimal'},
-    body:JSON.stringify(Array.isArray(data)?data:[data])
-  }).catch(()=>{});
-}
-
-/* STORAGE — guarda local + sincroniza a Supabase */
 const DB = {
   get(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch{return null;} },
-  set(k,v){
-    try{ localStorage.setItem(k,JSON.stringify(v)); }catch{}
-    if(k==='kv_users') sbUpsert('kv_users', v);
-    if(k==='kv_productions'){
-      const changed=v.filter(p=>{ const o=_cachedProds.find(x=>x.id===p.id); return !o||JSON.stringify(o)!==JSON.stringify(p); });
-      if(changed.length) sbUpsert('kv_productions', changed);
-      _cachedProds=[...v];
-    }
-  }
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} }
 };
 
-async function loadData(){
-  // Restaurar estado del formulario de imprenta desde localStorage
-  const savedImp=DB.get('kv_imp_state');
-  if(savedImp) state.imp={...state.imp,...savedImp};
-
-  document.getElementById('app').innerHTML=`
-    <div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:14px;background:#edf0f5">
-      <div style="font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:#00923d;letter-spacing:2px">◈ KREAVERDE</div>
-      <div style="font-size:13px;color:#7a8fa8">Conectando con la base de datos…</div>
-    </div>`;
-  try{
-    const [sbUsers, sbProds, sbImp, sbTroq] = await Promise.all([
-      sbFetch('kv_users'),
-      sbFetch('kv_productions','&order=created_at.asc'),
-      sbFetch('kv_imprenta','&order=created_at.desc'),
-      sbFetch('kv_troquel','&order=created_at.desc')
-    ]);
-    if(Array.isArray(sbUsers)&&sbUsers.length>0){
-      state.users=sbUsers; localStorage.setItem('kv_users',JSON.stringify(sbUsers));
-    } else {
-      state.users=[ADMIN_USER]; sbUpsert('kv_users',[ADMIN_USER]);
-    }
-    state.productions=Array.isArray(sbProds)?sbProds:[];
-    _cachedProds=[...state.productions];
-    localStorage.setItem('kv_productions',JSON.stringify(state.productions));
-    state.imp_orders=Array.isArray(sbImp)?sbImp:[];
-    state.troquelOrders=Array.isArray(sbTroq)?sbTroq:[];
-  } catch(e){
-    let users=DB.get('kv_users');
-    if(!users||!users.length){ users=[ADMIN_USER]; }
-    state.users=users;
-    state.productions=DB.get('kv_productions')||[];
-    _cachedProds=[...state.productions];
-    state.imp_orders=[];
-    state.troquelOrders=[];
-    notify('error','Sin conexión — usando datos locales');
-  }
-  render();
+function loadData(){
+  let users = DB.get('kv_users');
+  if(!users||users.length===0){ users=[ADMIN_USER]; DB.set('kv_users',users); }
+  state.users = users;
+  state.productions = DB.get('kv_productions')||[];
 }
 
 /* ══════════════════════════════════════
@@ -332,58 +273,45 @@ function notify(type,msg){
   setTimeout(()=>el.innerHTML='',3200);
 }
 
+/* Abre WhatsApp / correo con el aviso de orden completada YA escrito */
+function notifyCompletion(prod){
+  if(!prod) return;
+  const titulo   = prod.tipo==='personalizado' ? (prod.marca||prod.product) : prod.product;
+  const tipoLbl  = prod.tipo==='personalizado' ? 'Personalizado ('+(prod.marca||'')+')' : 'Blanco';
+  const cant     = (prod.produced_qty||0).toLocaleString();
+  const msg = [
+    '✅ ORDEN COMPLETADA — KreaVerde',
+    '',
+    'Título: '+titulo,
+    'Producto: '+prod.product,
+    'Tipo: '+tipoLbl,
+    'Cantidad fabricada: '+cant+' unidades',
+    'Máquina: '+machName(prod.machine_id),
+    'Completado por: '+(state.user?state.user.name:''),
+    'Fecha: '+fmt(now())
+  ].join('\n');
+  if(NOTIFY.metodo==='whatsapp'||NOTIFY.metodo==='both'){
+    window.open('https://wa.me/'+NOTIFY.whatsapp+'?text='+encodeURIComponent(msg),'_blank');
+  }
+  if(NOTIFY.metodo==='email'||NOTIFY.metodo==='both'){
+    const asunto='Orden completada: '+titulo+' ('+cant+' uds)';
+    window.open('mailto:'+NOTIFY.email+'?subject='+encodeURIComponent(asunto)+'&body='+encodeURIComponent(msg),'_blank');
+  }
+}
+
 /* ══════════════════════════════════════
    RENDER ENGINE
 ══════════════════════════════════════ */
-function renderMobileTopbar(){
-  const u=state.user;
-  return `<div style="background:#1a2535;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;position:sticky;top:0;z-index:200;border-bottom:1px solid #253548">
-    <div style="font-family:var(--rajd);font-size:17px;font-weight:700;letter-spacing:2px;color:#00e676">◈ KREAVERDE</div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-family:var(--rajd);font-size:12px;color:#8fa8c2">${escHTML(u.name.split(' ')[0])}</span>
-      <button id="mob-logout" style="background:rgba(255,61,61,.12);border:1px solid rgba(255,61,61,.3);color:#ff7070;border-radius:5px;cursor:pointer;font-size:11px;font-family:var(--rajd);padding:5px 10px">↩</button>
-    </div>
-  </div>`;
-}
-
-function renderBottomNav(){
-  const u=state.user;
-  const items=[
-    {id:'dashboard',label:'Dashboard',icon:'◉'},
-    {id:'productions',label:'Órdenes',icon:'☰'},
-    ...(u.role!=='operator'?[{id:'new-production',label:'Nueva',icon:'+'}]:[]),
-    ...(u.role==='admin'||u.role==='producer'?[{id:'admin',label:'Usuarios',icon:'◈'}]:[]),
-    ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
-    {id:'exportar',label:'Datos',icon:'⇅'},
-    ...(u.role==='admin'?[{id:'imprenta',label:'Imprenta',icon:'🖨'}]:[]),
-    ...(u.role==='admin'?[{id:'admin-dashboard',label:'Panel',icon:'★'}]:[])
-  ];
-  return `<div class="bottom-nav">${items.map(it=>`
-    <div class="bn-item${state.page===it.id?' active':''}" data-page="${it.id}">
-      <span class="bn-icon">${it.icon}</span>
-      <span class="bn-lbl">${escHTML(it.label)}</span>
-    </div>`).join('')}
-  </div>`;
-}
-
 function render(){
   const app=document.getElementById('app');
   if(!state.user){ app.innerHTML=renderAuth(); bindAuth(); return; }
   if(state.user.status==='pending'){ app.innerHTML=renderPending(); bindPending(); return; }
-  const isMobile=window.innerWidth<=768;
   app.innerHTML=`
     <div class="app">
-      ${!isMobile?renderSidebar():''}
-      <div class="main">
-        ${isMobile?renderMobileTopbar():''}
-        ${renderPage()}
-      </div>
-    </div>
-    ${isMobile?renderBottomNav():''}`;
+      ${renderSidebar()}
+      <div class="main">${renderPage()}</div>
+    </div>`;
   bindAll();
-  if(isMobile){
-    document.getElementById('mob-logout')?.addEventListener('click',()=>{ state.user=null; state.authPage='login'; render(); });
-  }
 }
 
 /* ══════════════════════════════════════
@@ -479,13 +407,7 @@ function renderSidebar(){
     {id:'productions',     label:'Producciones', icon:'☰'},
     ...(u.role!=='operator'?[{id:'new-production',label:'Nueva Prod.',icon:'+'}]:[]),
     ...(u.role==='admin'||u.role==='producer'?[{id:'admin',label:'Usuarios',icon:'◈'}]:[]),
-    ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[]),
-    {id:'exportar',label:'Exportar/Importar',icon:'⇅'},
-    ...(u.role==='admin'?[{id:'imprenta',label:'Orden Imprenta',icon:'🖨'}]:[]),
-    {id:'imp-ordenes',label:'Órdenes Imprenta',icon:'📋'},
-    {id:'troquel',label:'Troqueladora',icon:'✂'},
-    ...(u.role!=='operator'?[{id:'new-troquel',label:'Nueva Troquel',icon:'◇'}]:[]),
-    ...(u.role==='admin'?[{id:'admin-dashboard',label:'Panel Admin',icon:'★'}]:[])
+    ...(u.role==='admin'?[{id:'audit',label:'Auditoría',icon:'↕'}]:[])
   ];
   const roleColor=u.role==='admin'?'var(--red)':u.role==='producer'?'var(--amber)':'var(--blue)';
   return `
@@ -516,153 +438,10 @@ function renderPage(){
     case 'productions':      return renderProductions();
     case 'new-production':   return renderNewProduction();
     case 'production-detail':return renderProductionDetail();
-    case 'machine-queue':    return renderMachineQueue();
     case 'admin':            return (state.user.role==='admin'||state.user.role==='producer')?renderAdmin():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     case 'audit':            return state.user.role==='admin'?renderAudit():'<div class="content"><div class="empty">Acceso restringido</div></div>';
-    case 'exportar':         return renderExportar();
-    case 'imprenta':         return renderImprenta();
-    case 'imp-ordenes':      return renderImpOrdenes();
-    case 'troquel':          return renderTroquelList();
-    case 'new-troquel':      return (state.user.role!=='operator')?renderNewTroquel():'<div class="content"><div class="empty">Acceso restringido</div></div>';
-    case 'troquel-detail':   return renderTroquelDetail();
-    case 'admin-dashboard':  return state.user.role==='admin'?renderAdminDashboard():'<div class="content"><div class="empty">Acceso restringido</div></div>';
     default:                 return renderDashboard();
   }
-}
-
-/* ══════════════════════════════════════
-   MACHINE QUEUE
-══════════════════════════════════════ */
-function renderMachineQueue(){
-  const m=MACHINES.find(x=>x.id===state.selectedMachineId);
-  if(!m) return `<div class="content"><div class="empty">Máquina no encontrada</div></div>`;
-
-  const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
-  const orders=state.productions
-    .filter(p=>p.machine_id===m.id && activeStatuses.includes(p.status))
-    .sort((a,b)=>{
-      const rank=s=>s==='en_proceso'?0:s==='cambio_molde'?1:s==='pausada'?2:3;
-      if(rank(a.status)!==rank(b.status)) return rank(a.status)-rank(b.status);
-      return new Date(a.created_at)-new Date(b.created_at);
-    });
-
-  if(!orders.length){
-    return `
-    <div class="ph">
-      <div class="row" style="gap:10px">
-        <button class="btn btn-secondary btn-sm" data-page="dashboard">← Volver</button>
-        <div style="font-family:var(--rajd);font-size:22px;font-weight:700">${escHTML(m.name)}</div>
-      </div>
-    </div>
-    <div class="content"><div class="empty">Sin órdenes pendientes en esta máquina</div></div>`;
-  }
-
-  const currentProd=orders[0].product;
-  let lastProduct=null;
-  let moldeCount=0;
-
-  const cards=orders.map((p,i)=>{
-    const st=STATUS[p.status]||{label:p.status,color:'#64748b'};
-    const perc=pct(p.produced_qty||0,p.target_qty||1);
-    const isFirst=i===0;
-    const isSameMolde=p.product===currentProd;
-    const needsMoldChange=!isFirst && p.product!==currentProd;
-    const isNewProduct=p.product!==lastProduct;
-    lastProduct=p.product;
-
-    // Separador de cambio de molde
-    const separator=(!isFirst && isNewProduct && needsMoldChange)?`
-      <div style="display:flex;align-items:center;gap:10px;margin:16px 0 10px">
-        <div style="flex:1;height:2px;background:#fde68a;border-radius:1px"></div>
-        <div style="background:#fff3cd;border:1px solid #fde68a;border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:#b86e00;font-family:var(--rajd);letter-spacing:.5px;white-space:nowrap">🔧 CAMBIO DE MOLDE</div>
-        <div style="flex:1;height:2px;background:#fde68a;border-radius:1px"></div>
-      </div>`
-    :(!isFirst && isNewProduct && isSameMolde)?`
-      <div style="display:flex;align-items:center;gap:10px;margin:10px 0 6px">
-        <div style="flex:1;height:1px;background:#d1fae5"></div>
-        <div style="font-size:10px;color:#00923d;font-weight:700;font-family:var(--rajd)">MISMO MOLDE</div>
-        <div style="flex:1;height:1px;background:#d1fae5"></div>
-      </div>`:'';
-
-    const borderColor=isFirst?(p.status==='en_proceso'?m.color:'#64748b'):isSameMolde?'#d1fae5':'#fde68a';
-    const bgColor=isFirst?'#ffffff':isSameMolde?'#f7fffe':'#fffdf5';
-
-    const stIcon=p.status==='en_proceso'?'▶':p.status==='cambio_molde'?'🔧':p.status==='pausada'?'⏸':'⏳';
-
-    return `${separator}
-    <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:14px;overflow:hidden;cursor:pointer;${isFirst&&p.status==='en_proceso'?'box-shadow:0 4px 20px '+m.color+'33':''}" data-open-prod="${p.id}">
-      <!-- Número y estado -->
-      <div style="display:flex;align-items:center;gap:0;padding:12px 14px;border-bottom:1px solid ${borderColor}">
-        <div style="width:36px;height:36px;border-radius:50%;background:${isFirst?m.color:isSameMolde?'#e8f5ee':'#fff3cd'};display:flex;align-items:center;justify-content:center;font-size:${isFirst?'18':'15'}px;font-weight:700;color:${isFirst?'#fff':isSameMolde?'#00923d':'#b86e00'};flex-shrink:0;margin-right:12px">
-          ${isFirst?stIcon:(i+1)}
-        </div>
-        <div style="flex:1">
-          <div style="font-family:var(--rajd);font-size:${isFirst?'20':'16'}px;font-weight:700;color:#0f1923;line-height:1.1">${escHTML(p.product)}</div>
-          <div style="font-size:11px;color:#7a8fa8;margin-top:3px">
-            ${p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700">${escHTML(p.marca||'PERS')}</span> · `:''}
-            Turno ${escHTML(p.shift)} · ${escHTML(st.label)}
-          </div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:${isFirst?'24':'18'}px;font-weight:700;font-family:var(--mono);color:#0f1923;line-height:1">${(p.produced_qty||0).toLocaleString()}</div>
-          <div style="font-size:10px;color:#92a6bf">/ ${(p.target_qty||0).toLocaleString()}</div>
-        </div>
-      </div>
-      <!-- Barra progreso -->
-      <div style="padding:10px 14px">
-        <div style="height:${isFirst?'10':'6'}px;background:#edf0f5;border-radius:5px;overflow:hidden;margin-bottom:5px">
-          <div style="width:${perc}%;height:100%;background:${isFirst?m.color:isSameMolde?'#00923d':'#ffab00'};border-radius:5px;transition:width .5s"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between">
-          <span style="font-size:12px;font-weight:700;color:${isFirst?m.color:'#7a8fa8'}">${perc}% completado</span>
-          ${p.damages?.length?`<span style="font-size:11px;color:#cc1f1f">⚠ ${p.damages.length} daño${p.damages.length>1?'s':''}</span>`:''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-
-  return `
-  <div class="ph">
-    <div class="row" style="gap:10px;align-items:center">
-      <button class="btn btn-secondary btn-sm" data-page="dashboard" style="padding:7px 12px;flex-shrink:0">← Volver</button>
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:12px;height:12px;border-radius:50%;background:${m.color};flex-shrink:0"></div>
-          <div style="font-family:var(--rajd);font-size:20px;font-weight:700">${escHTML(m.name)}</div>
-        </div>
-        <div style="font-size:12px;color:var(--txt2);margin-top:3px">${orders.length} orden${orders.length!==1?'es':''} en cola</div>
-      </div>
-    </div>
-  </div>
-  <div class="content">
-    ${cards}
-    <div style="height:20px"></div>
-  </div>`;
-}
-
-function renderExportar(){
-  return `
-  <div class="ph">
-    <div class="ph-title">Exportar / Importar</div>
-    <div class="ph-sub">Mueve tus datos entre dispositivos o haz una copia de seguridad</div>
-  </div>
-  <div class="content">
-    <div class="card" style="max-width:600px;margin-bottom:20px">
-      <div class="st">⬆ Exportar Datos</div>
-      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.7">Copia todo el contenido (usuarios, producciones) al portapapeles para guardarlo o importarlo en otro navegador/dispositivo.</p>
-      <button class="btn btn-primary" id="exp-btn">⬆ Exportar al portapapeles</button>
-      <div id="exp-ok" style="display:none;margin-top:10px;color:var(--green);font-family:var(--rajd);font-size:13px">✓ Datos copiados. Pégalos en el campo de importación del otro dispositivo.</div>
-    </div>
-    <div class="card" style="max-width:600px">
-      <div class="st">⬇ Importar Datos</div>
-      <p style="font-size:13px;color:var(--txt2);margin-bottom:16px;line-height:1.7">Pega aquí el texto exportado. <strong style="color:var(--red)">Esto reemplazará todos los datos actuales.</strong></p>
-      <div class="field" style="margin-bottom:14px"><label>Pega aquí el texto copiado</label>
-        <textarea id="imp-text" style="min-height:120px;font-family:var(--mono);font-size:11px" placeholder='{"users":[...],"productions":[...]}'></textarea>
-      </div>
-      <div id="imp-err" class="err" style="margin-bottom:10px"></div>
-      <button class="btn btn-warn" id="imp-btn">⬇ Importar datos</button>
-    </div>
-  </div>`;
 }
 
 /* ══════════════════════════════════════
@@ -677,130 +456,50 @@ function renderDashboard(){
   const dateStr=new Date().toLocaleDateString('es-EC',{weekday:'long',day:'numeric',month:'long'});
 
   const machCards=MACHINES.map(m=>{
-    // Todas las órdenes activas de esta máquina (no completadas, no canceladas)
-    const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
-    const allOrders=state.productions
-      .filter(p=>p.machine_id===m.id && activeStatuses.includes(p.status))
-      .sort((a,b)=>{
-        // Prioridad: en_proceso/cambio_molde primero, luego pausada, luego pendiente
-        const rank=s=>s==='en_proceso'?0:s==='cambio_molde'?1:s==='pausada'?2:3;
-        if(rank(a.status)!==rank(b.status)) return rank(a.status)-rank(b.status);
-        return new Date(a.created_at)-new Date(b.created_at);
-      });
+    const active=state.productions.find(p=>p.machine_id===m.id&&p.status==='en_proceso');
+    const cur=active||state.productions.find(p=>p.machine_id===m.id&&['pendiente','cambio_molde','pausada'].includes(p.status));
+    const st=cur?STATUS[cur.status]:{label:'Sin actividad',color:'#c5cfde'};
+    const perc=cur?pct(cur.produced_qty||0,cur.target_qty||1):0;
+    const val=cur?(cur.produced_qty||0)*(cur.unit_price||0):0;
+    const hasDmg=cur&&cur.damages?.length>0;
+    const tipoTag=cur?(cur.tipo==='personalizado'
+      ?`<span style="color:#b86e00;font-weight:700;font-size:11px">PERS · ${escHTML(cur.marca||'')}</span>`
+      :`<span style="color:#92a6bf;font-size:11px">Blanco</span>`):'';
+    const pulseEl=active?`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#00923d;margin-left:7px;vertical-align:middle;animation:kvpulse 2s infinite"></span>`:'';
 
-    const cur=allOrders[0];
-    if(!cur){
-      return `<div style="background:#fff;border-radius:14px;border:1px solid #dde3ec;overflow:hidden;margin-bottom:14px">
-        <div style="display:flex;align-items:stretch">
-          <div style="width:6px;flex-shrink:0;background:${m.color}"></div>
-          <div style="flex:1;padding:16px">
-            <div style="font-family:var(--rajd);font-size:16px;font-weight:700;color:#0f1923">${escHTML(m.name)}</div>
-            <div style="font-size:13px;color:#c5cfde;margin-top:5px;font-style:italic">Sin órdenes pendientes</div>
-          </div>
+    const bodyActive=cur?`
+      <div style="display:flex;align-items:center;gap:0">
+        <div style="flex:1;padding:11px 13px">
+          <div style="font-size:13px;font-weight:700;color:#0f1923">${escHTML(m.name)}${pulseEl}</div>
+          <div style="font-size:11px;color:#4a6180;margin-top:2px">${escHTML(cur.product)} · ${tipoTag}</div>
         </div>
-      </div>`;
-    }
-
-    const curProd=cur.product;
-    // Órdenes del mismo producto (sin contar la actual) = sin cambio de molde
-    const sameProduct=allOrders.slice(1).filter(p=>p.product===curProd);
-    // Órdenes de otros productos = requieren cambio de molde
-    const otherProduct=allOrders.slice(1).filter(p=>p.product!==curProd);
-
-    const perc=pct(cur.produced_qty||0,cur.target_qty||1);
-    const st=STATUS[cur.status]||{label:cur.status,color:'#64748b'};
-    const isActive=cur.status==='en_proceso';
-    const hasDmg=cur.damages?.length>0;
-
-    // Status icon
-    const stIcon=cur.status==='en_proceso'?'▶':cur.status==='cambio_molde'?'🔧':cur.status==='pausada'?'⏸':'⏳';
-
-    // Tipo badge
-    const tipoBadge=cur.tipo==='personalizado'
-      ?`<span style="background:#fff3cd;color:#b86e00;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700">${escHTML(cur.marca||'PERS')}</span>`
-      :`<span style="background:#f0f3f7;color:#7a8fa8;padding:2px 8px;border-radius:4px;font-size:11px">Blanco</span>`;
-
-    // Cola siguiente — mismo producto
-    const sameRows=sameProduct.map((p,i)=>{
-      const pp=pct(p.produced_qty||0,p.target_qty||1);
-      const tipoLabel=p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700">${escHTML(p.marca||'PERS')}</span>`:`<span style="color:#7a8fa8">Blanco</span>`;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #edf0f5;cursor:pointer" data-open-prod="${p.id}">
-        <div style="width:28px;height:28px;border-radius:50%;background:#e8f5ee;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#00923d;flex-shrink:0">${i+2}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:#0f1923">${escHTML(p.product)}</div>
-          <div style="font-size:11px;color:#7a8fa8">Obj: ${(p.target_qty||0).toLocaleString()} · ${tipoLabel}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:11px;font-weight:700;color:#00923d">✓ Sin cambio</div>
-          <div style="font-size:10px;color:#92a6bf">de molde</div>
-        </div>
-      </div>`;
-    }).join('');
-
-    // Cola después — distinto producto
-    const otherRows=otherProduct.map((p,i)=>{
-      const tipoLabel=p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700">${escHTML(p.marca||'PERS')}</span>`:`<span style="color:#7a8fa8">Blanco</span>`;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid #edf0f5;cursor:pointer;background:#fffbf5" data-open-prod="${p.id}">
-        <div style="width:28px;height:28px;border-radius:50%;background:#fff3cd;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#b86e00;flex-shrink:0">${sameProduct.length+i+2}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:600;color:#0f1923">${escHTML(p.product)}</div>
-          <div style="font-size:11px;color:#7a8fa8">Obj: ${(p.target_qty||0).toLocaleString()} · ${tipoLabel}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:11px;font-weight:700;color:#b86e00">⚠ Cambio</div>
-          <div style="font-size:10px;color:#92a6bf">de molde</div>
-        </div>
-      </div>`;
-    }).join('');
-
-    const separatorSame=sameProduct.length?`
-      <div style="padding:6px 14px;background:#e8f5ee;display:flex;align-items:center;gap:6px">
-        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#00923d;font-family:var(--rajd)">A CONTINUACIÓN — MISMO MOLDE</span>
-      </div>${sameRows}`:'';
-
-    const separatorOther=otherProduct.length?`
-      <div style="padding:6px 14px;background:#fff3cd;display:flex;align-items:center;gap:6px">
-        <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;color:#b86e00;font-family:var(--rajd)">DESPUÉS — REQUIERE CAMBIO DE MOLDE</span>
-      </div>${otherRows}`:'';
-
-    return `<div style="background:#fff;border-radius:14px;border:2px solid ${isActive?m.color:'#dde3ec'};overflow:hidden;margin-bottom:14px;${isActive?'box-shadow:0 4px 20px '+m.color+'33':''}">
-      <!-- Encabezado máquina — clic abre cola completa -->
-      <div style="display:flex;align-items:center;gap:0;background:${isActive?m.color+'14':'#f8fafc'};border-bottom:1px solid ${isActive?m.color+'33':'#edf0f5'};cursor:pointer" data-open-machine="${m.id}">
-        <div style="width:6px;flex-shrink:0;background:${m.color};align-self:stretch"></div>
-        <div style="flex:1;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
-          <div>
-            <div style="font-family:var(--rajd);font-size:15px;font-weight:700;color:#0f1923;display:flex;align-items:center;gap:7px">
-              ${escHTML(m.name)}
-              ${isActive?`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00923d;animation:kvpulse 2s infinite"></span>`:''}
-            </div>
-            <div style="font-size:11px;color:#7a8fa8;margin-top:2px">${allOrders.length} orden${allOrders.length!==1?'es':''} en cola · <span style="color:${m.color};font-weight:700">Ver todas →</span></div>
-          </div>
-          <span style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;font-family:var(--rajd);color:${st.color};background:${st.color}18">${stIcon} ${escHTML(st.label)}</span>
+        <div style="padding:11px 13px;text-align:right;flex-shrink:0">
+          <div style="font-size:20px;font-weight:700;font-family:var(--mono);color:#0f1923;line-height:1">${(cur.produced_qty||0).toLocaleString()}</div>
+          <div style="font-size:10px;color:#92a6bf;margin-top:2px">de ${(cur.target_qty||0).toLocaleString()}</div>
         </div>
       </div>
-      <!-- Orden actual -->
-      <div style="padding:14px;cursor:pointer" data-open-prod="${cur.id}">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px">
-          <div>
-            <div style="font-size:18px;font-weight:700;color:#0f1923;line-height:1.2">${escHTML(curProd)}</div>
-            <div style="margin-top:5px">${tipoBadge}</div>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:26px;font-weight:700;font-family:var(--mono);color:#0f1923;line-height:1">${(cur.produced_qty||0).toLocaleString()}</div>
-            <div style="font-size:11px;color:#92a6bf">de ${(cur.target_qty||0).toLocaleString()}</div>
-          </div>
-        </div>
-        <div style="height:8px;background:#edf0f5;border-radius:4px;overflow:hidden;margin-bottom:6px">
-          <div style="width:${perc}%;height:100%;background:${m.color};border-radius:4px;transition:width .5s"></div>
+      <div style="padding:0 13px 11px" data-open-prod="${cur.id}">
+        <div style="height:5px;background:#edf0f5;border-radius:3px;overflow:hidden;margin-bottom:7px">
+          <div style="width:${perc}%;height:100%;background:${m.color};border-radius:3px;transition:width .5s"></div>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:13px;font-weight:700;color:${m.color}">${perc}% completado</span>
-          ${hasDmg?`<span style="font-size:12px;color:#cc1f1f;font-weight:600">⚠ ${cur.damages.length} daño${cur.damages.length>1?'s':''}</span>`:''}
+          <span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;color:${st.color};background:${st.color}18">${escHTML(st.label)}</span>
+          <span style="font-size:11px;color:#b86e00;font-weight:700">${usd(val)} · ${perc}%</span>
         </div>
+        ${hasDmg?`<div style="margin-top:6px;font-size:11px;color:#cc1f1f;font-weight:600">⚠ ${cur.damages.length} daño${cur.damages.length>1?'s':''} reportado${cur.damages.length>1?'s':''}</div>`:''}
+      </div>`
+    :`<div style="display:flex;align-items:center;gap:0">
+        <div style="flex:1;padding:11px 13px">
+          <div style="font-size:13px;font-weight:700;color:#0f1923">${escHTML(m.name)}</div>
+          <div style="font-size:12px;color:#c5cfde;font-style:italic;margin-top:3px">Sin producción activa</div>
+        </div>
+      </div>`;
+
+    return `<div class="mcard" data-open-prod="${cur?cur.id:''}" style="background:#fff;border-radius:12px;border:1px solid #dde3ec;margin-bottom:10px;overflow:hidden;cursor:${cur?'pointer':'default'}">
+      <div style="display:flex;align-items:stretch">
+        <div style="width:5px;flex-shrink:0;background:${m.color}"></div>
+        <div style="flex:1">${bodyActive}</div>
       </div>
-      <!-- Cola -->
-      ${separatorSame}
-      ${separatorOther}
     </div>`;
   }).join('');
 
@@ -810,51 +509,28 @@ function renderDashboard(){
     <div class="ph-sub" style="text-transform:capitalize">${escHTML(dateStr)}</div>
   </div>
   <div class="content">
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:24px">
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
-        <div style="font-family:var(--mono);font-size:26px;color:#00923d">${activeMach}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Máquinas Activas</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:13px;margin-bottom:28px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:17px">
+        <div style="font-family:var(--mono);font-size:28px;color:#00923d">${activeMach}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:5px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--rajd)">Máquinas Activas</div>
       </div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
-        <div style="font-family:var(--mono);font-size:26px;color:#1a5fd4">${todayP.length}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Órdenes Hoy</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:17px">
+        <div style="font-family:var(--mono);font-size:28px;color:#1a5fd4">${todayP.length}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:5px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--rajd)">Órdenes Hoy</div>
       </div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
-        <div style="font-family:var(--mono);font-size:26px;color:${totalDmg>0?'#cc1f1f':'#00923d'}">${totalDmg}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Daños</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:17px">
+        <div style="font-family:var(--mono);font-size:28px;color:#b86e00">${usd(todayVal)}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:5px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--rajd)">Valor Hoy</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:17px">
+        <div style="font-family:var(--mono);font-size:28px;color:${totalDmg>0?'#cc1f1f':'#00923d'}">${totalDmg}</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:5px;letter-spacing:1.5px;text-transform:uppercase;font-family:var(--rajd)">Daños Activos</div>
       </div>
     </div>
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:14px;font-family:var(--rajd)">Cola de Producción por Máquina</div>
-    ${(()=>{ const pendientes=state.imp_orders.filter(o=>o.estado!=='enviada'&&o.estado!=='cancelada'); return pendientes.length?`
-    <div style="background:#fff;border:2px solid #0f1923;border-radius:12px;padding:0;overflow:hidden;margin-bottom:22px">
-      <div style="background:#0f1923;padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
-        <div style="font-family:var(--rajd);font-size:13px;font-weight:700;letter-spacing:2px;color:#00e676">🖨 ÓRDENES DE IMPRENTA</div>
-        <span style="font-size:11px;color:#7a8fa8">${pendientes.length} pendiente${pendientes.length!==1?'s':''}</span>
-      </div>
-      <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th>${(state.user.role==='admin'||state.user.role==='producer')?'<th>Acción</th>':''}</tr></thead>
-        <tbody>${pendientes.map(o=>`<tr>
-          <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
-          <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}<br><span style="font-size:10px;color:#7a8fa8;font-weight:400">${escHTML(o.producto)} · ${escHTML(o.material)} · ${escHTML(o.imprenta)}</span></td>
-          <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span> ${(o.cantidad||0).toLocaleString()} uds</td>
-          <td class="mono" style="font-weight:700;font-size:16px">${(o.hojas||0).toLocaleString()}</td>
-          <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:#fff3cd;color:#b86e00">⏳ Pendiente</span></td>
-          ${(state.user.role==='admin'||state.user.role==='producer')?`<td><div class="row">
-            <button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Enviada</button>
-            <button class="btn btn-sm btn-danger" data-imp-cancel="${o.id}">✗ Cancelar</button>
-          </div></td>`:''}
-        </tr>`).join('')}
-        </tbody>
-      </table></div>
-    </div>`:`
-    <div style="background:#f8fafc;border:1px dashed #dde3ec;border-radius:10px;padding:16px;margin-bottom:22px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:24px">🖨</span>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--txt2)">Sin órdenes de imprenta pendientes</div>
-        <div style="font-size:11px;color:var(--txt3)">Todas las órdenes han sido enviadas</div>
-      </div>
-    </div>`; })()}
-    ${machCards}
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:14px;font-family:var(--rajd)">Estado de Máquinas</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px;margin-bottom:28px">
+      ${machCards}
+    </div>
   </div>`;
 }
 
@@ -875,7 +551,7 @@ function renderProductions(){
     <tr class="clickable" data-open-prod="${p.id}">
       <td style="color:${machColor(p.machine_id)};font-size:11px;font-weight:700">${escHTML(machName(p.machine_id))}</td>
       <td style="font-weight:600">${escHTML(p.product)}</td>
-      <td>${p.tipo==='personalizado'?`<span style="color:#b86e00;font-weight:700;font-size:11px">${escHTML(p.marca||'PERS')}</span>`:`<span style="color:#7a8fa8;font-size:11px">Blanco</span>`}</td>
+      <td style="font-size:11px">${p.tipo==='personalizado'?`<span style="color:var(--amber);font-weight:700">PERS</span> · ${escHTML(p.marca||'')}`:`<span style="color:var(--txt2)">Blanco</span>`}</td>
       <td>${statusBadge(p.status)}</td>
       <td style="text-transform:capitalize;font-size:11px;color:var(--txt2)">${escHTML(p.shift)}</td>
       <td class="mono" style="font-size:12px">${(p.target_qty||0).toLocaleString()}</td>
@@ -886,10 +562,11 @@ function renderProductions(){
           <span class="mono" style="font-size:10px;color:var(--txt2)">${pct(p.produced_qty||0,p.target_qty||1)}%</span>
         </div>
       </td>
+      <td class="mono" style="font-size:12px;color:var(--amber)">${usd((p.produced_qty||0)*(p.unit_price||0))}</td>
       <td style="color:${p.damages?.length>0?'var(--red)':'var(--txt3)'};font-size:12px">${p.damages?.length>0?`⚠ ${p.damages.length}`:'—'}</td>
       <td style="font-size:11px;color:var(--txt2)">${escHTML(uname(p.created_by))}</td>
       <td style="font-size:10px;color:var(--txt3)">${fmt(p.created_at)}</td>
-    </tr>`).join(''):`<tr><td colspan="11"><div class="empty">Sin producciones que coincidan</div></td></tr>`;
+    </tr>`).join(''):`<tr><td colspan="12"><div class="empty">Sin producciones que coincidan</div></td></tr>`;
 
   return `
   <div class="ph">
@@ -915,7 +592,7 @@ function renderProductions(){
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <div class="tw"><table>
-        <thead><tr><th>Máquina</th><th>Producto</th><th>Tipo</th><th>Estado</th><th>Turno</th><th>Objetivo</th><th>Producido</th><th>Avance</th><th>Daños</th><th>Por</th><th>Fecha</th></tr></thead>
+        <thead><tr><th>Máquina</th><th>Producto</th><th>Tipo</th><th>Estado</th><th>Turno</th><th>Objetivo</th><th>Producido</th><th>Avance</th><th>Valor</th><th>Daños</th><th>Por</th><th>Fecha</th></tr></thead>
         <tbody>${rows}</tbody>
       </table></div>
     </div>
@@ -966,6 +643,9 @@ function renderNewProduction(){
             <input id="np-marca" placeholder="ej: Mykonos, Zanzíbar..."/>
           </div>
         </div>
+        <div class="field"><label>Precio Unitario USD (opcional)</label>
+          <input id="np-price" type="number" step="0.001" placeholder="ej: 0.033"/>
+        </div>
         <div class="field"><label>Observaciones</label>
           <textarea id="np-obs" placeholder="Instrucciones especiales, color, cliente..."></textarea>
         </div>
@@ -1001,9 +681,14 @@ function renderProductionDetail(){
             ${Object.entries(STATUS).map(([k,v])=>`<option value="${k}"${prod.status===k?' selected':''}>${escHTML(v.label)}</option>`).join('')}
           </select>
         </div>
-        <div class="field"><label>Cantidad Producida</label>
+        <div class="fr">
+          <div class="field"><label>Cantidad Producida</label>
             <input id="det-qty" type="number" value="${prod.produced_qty||0}"${!canEdit?' disabled':''}/>
           </div>
+          <div class="field"><label>Precio Unitario USD</label>
+            <input id="det-price" type="number" step="0.001" value="${prod.unit_price||0}"${!canPrice?' disabled':''}/>
+          </div>
+        </div>
         <div class="field"><label>Observaciones</label>
           <textarea id="det-obs"${!canEdit?' disabled':''}>${escHTML(prod.observations||'')}</textarea>
         </div>
@@ -1023,6 +708,7 @@ function renderProductionDetail(){
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div><div class="mono" style="font-size:28px;color:var(--green)">${(prod.produced_qty||0).toLocaleString()}</div><div class="lbl">Producido</div></div>
             <div><div class="mono" style="font-size:28px;color:var(--txt2)">${(prod.target_qty||0).toLocaleString()}</div><div class="lbl">Objetivo</div></div>
+            <div><div class="mono" style="font-size:28px;color:var(--amber)">${usd(value)}</div><div class="lbl">Valor Fabricado</div></div>
             <div><div class="mono" style="font-size:28px;color:var(--blue)">${pct(prod.produced_qty||0,prod.target_qty||1)}%</div><div class="lbl">Avance</div></div>
           </div>
           <div class="pbar" style="margin-top:14px"><div class="pfill" style="width:${pct(prod.produced_qty||0,prod.target_qty||1)}%;background:${m?.color||'var(--green)'}"></div></div>
@@ -1163,41 +849,10 @@ function renderAdmin(){
 
   return `
   <div class="ph">
-    <div class="row" style="align-items:flex-start">
-      <div>
-        <div class="ph-title">Gestión de Usuarios</div>
-        <div class="ph-sub">Aprobación de accesos · ${state.users.length} usuario${state.users.length!==1?'s':''} registrado${state.users.length!==1?'s':''}</div>
-      </div>
-      <div class="sp"></div>
-      ${state.user.role==='admin'?`<button class="btn btn-primary btn-sm" id="adm-create-toggle">+ Crear Usuario</button>`:''}
-    </div>
+    <div class="ph-title">Gestión de Usuarios</div>
+    <div class="ph-sub">Aprobación de accesos · ${state.users.length} usuario${state.users.length!==1?'s':''} registrado${state.users.length!==1?'s':''}</div>
   </div>
   <div class="content">
-    <div id="adm-create-form" style="display:none;margin-bottom:20px">
-      <div class="card fg" style="max-width:520px">
-        <div class="st">Nuevo Usuario</div>
-        <div class="fr">
-          <div class="field"><label>Nombre Completo *</label><input id="adm-name" placeholder="ej: Ana Torres"/></div>
-          <div class="field"><label>Usuario *</label><input id="adm-user" placeholder="ej: ana.torres"/></div>
-        </div>
-        <div class="fr">
-          <div class="field"><label>Contraseña *</label><input id="adm-pass" type="password" placeholder="mínimo 4 caracteres"/></div>
-          <div class="field"><label>Rol</label>
-            <select id="adm-role">
-              <option value="operator">Operador</option>
-              <option value="producer">Productor</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-        </div>
-        <div id="adm-create-err" class="err"></div>
-        <div class="row">
-          <button class="btn btn-primary btn-sm" id="adm-create-save">✓ Crear Usuario</button>
-          <button class="btn btn-secondary btn-sm" id="adm-create-cancel">Cancelar</button>
-        </div>
-      </div>
-    </div>
-
     ${pending.length?`
     <div class="st" style="color:var(--amber)">⏳ Pendientes de Aprobación (${pending.length})</div>
     <div class="card" style="padding:0;overflow:hidden;margin-bottom:24px">
@@ -1302,20 +957,10 @@ function bindAll(){
 
   /* OPEN PROD FROM CARD/ROW */
   document.querySelectorAll('[data-open-prod]').forEach(el=>{
-    el.addEventListener('click',(e)=>{
-      e.stopPropagation();
+    el.addEventListener('click',()=>{
       const id=el.dataset.openProd;
       if(!id)return;
       state.selectedProdId=id; state.page='production-detail'; state.tab='info'; render();
-    });
-  });
-
-  /* OPEN MACHINE QUEUE */
-  document.querySelectorAll('[data-open-machine]').forEach(el=>{
-    el.addEventListener('click',(e)=>{
-      e.stopPropagation();
-      state.selectedMachineId=el.dataset.openMachine;
-      state.page='machine-queue'; render();
     });
   });
 
@@ -1348,14 +993,14 @@ function bindAll(){
     const err=document.getElementById('np-err');
     const tipo=document.getElementById('np-tipo').value;
     const marca=document.getElementById('np-marca')?.value.trim()||'';
-    if(!mid||!prod||!qty){ err.textContent='Completa: Máquina, Producto y Cantidad Objetivo'; return; }
-    if(tipo==='personalizado'&&!marca){ err.textContent='Indica el nombre de la marca'; return; }
+    if(!mid||!prod||!qty){ err.textContent='Completa: Máquina, Producto y Cantidad Objetivo'; notify('error','Faltan datos: Máquina, Producto y Cantidad'); return; }
+    if(tipo==='personalizado'&&!marca){ err.textContent='Indica el nombre de la marca'; notify('error','Indica el nombre de la marca'); return; }
     const np={
       id:'prod_'+uid(), machine_id:mid, product:prod,
       tipo:tipo, marca:tipo==='personalizado'?marca:'',
       status:'pendiente', shift:document.getElementById('np-shift').value,
       target_qty:qty, produced_qty:0,
-      unit_price:0,
+      unit_price:parseFloat(document.getElementById('np-price').value)||0,
       observations:document.getElementById('np-obs').value,
       damages:[], mold_changes:[], start_time:null, end_time:null,
       created_by:state.user.id, created_at:now(),
@@ -1386,7 +1031,8 @@ function bindAll(){
       audit_log:[...(prod.audit_log||[]),{action:'Actualización rápida',by:state.user.id,by_name:state.user.name,at:now(),changes,note:''}]};
     state.productions=state.productions.map(p=>p.id===state.selectedProdId?updated:p);
     DB.set('kv_productions',state.productions);
-    notify('success','Guardado correctamente');
+    if(newStatus==='completada' && prod.status!=='completada'){ notifyCompletion(updated); notify('success','Orden completada — enviando aviso'); }
+    else notify('success','Guardado correctamente');
     render();
   });
 
@@ -1396,10 +1042,12 @@ function bindAll(){
     if(!prod) return;
     const newStatus=document.getElementById('det-status').value;
     const newQty=parseInt(document.getElementById('det-qty').value)||0;
+    const newPrice=parseFloat(document.getElementById('det-price').value)||0;
     const newObs=document.getElementById('det-obs').value;
     const changes={};
     if(newStatus!==prod.status) changes.status={old:prod.status,new:newStatus};
     if(newQty!==prod.produced_qty) changes.produced_qty={old:prod.produced_qty,new:newQty};
+    if(newPrice!==prod.unit_price) changes.unit_price={old:prod.unit_price,new:newPrice};
 
     let mold_changes=[...(prod.mold_changes||[])];
     let start_time=prod.start_time, end_time=prod.end_time;
@@ -1408,11 +1056,12 @@ function bindAll(){
     if(prod.status==='pendiente'&&newStatus==='en_proceso') start_time=now();
     if(['completada','cancelada'].includes(newStatus)&&!prod.end_time) end_time=now();
 
-    const updated={...prod,status:newStatus,produced_qty:newQty,observations:newObs,mold_changes,start_time,end_time,
+    const updated={...prod,status:newStatus,produced_qty:newQty,unit_price:newPrice,observations:newObs,mold_changes,start_time,end_time,
       audit_log:[...(prod.audit_log||[]),{action:'Actualización',by:state.user.id,by_name:state.user.name,at:now(),changes,note:''}]};
     state.productions=state.productions.map(p=>p.id===state.selectedProdId?updated:p);
     DB.set('kv_productions',state.productions);
-    notify('success','Guardado correctamente');
+    if(newStatus==='completada' && prod.status!=='completada'){ notifyCompletion(updated); notify('success','Orden completada — enviando aviso'); }
+    else notify('success','Guardado correctamente');
     render();
   });
 
@@ -1475,879 +1124,13 @@ function bindAll(){
       render();
     });
   });
-
-  /* CREAR USUARIO */
-  document.getElementById('adm-create-toggle')?.addEventListener('click',()=>{
-    const f=document.getElementById('adm-create-form');
-    f.style.display=f.style.display==='none'?'block':'none';
-    if(f.style.display==='block') document.getElementById('adm-name')?.focus();
-  });
-  document.getElementById('adm-create-cancel')?.addEventListener('click',()=>{
-    document.getElementById('adm-create-form').style.display='none';
-  });
-  document.getElementById('adm-create-save')?.addEventListener('click',()=>{
-    const name=document.getElementById('adm-name').value.trim();
-    const username=document.getElementById('adm-user').value.trim();
-    const password=document.getElementById('adm-pass').value;
-    const role=document.getElementById('adm-role').value;
-    const err=document.getElementById('adm-create-err');
-    if(!name||!username||!password){ err.textContent='Completa todos los campos'; return; }
-    if(state.users.find(u=>u.username===username)){ err.textContent='Ese nombre de usuario ya existe'; return; }
-    const nu={id:'usr_'+uid(),username,password,name,role,status:'approved',created_at:now(),created_by:state.user.id};
-    state.users.push(nu);
-    DB.set('kv_users',state.users);
-    notify('success',`Usuario "${name}" creado correctamente`);
-    render();
-  });
-
-  /* IMPRENTA */
-  const impSync=()=>{
-    state.imp.cliente   = document.getElementById('imp-cliente')?.value||state.imp.cliente;
-    state.imp.producto  = document.getElementById('imp-producto')?.value||state.imp.producto;
-    state.imp.cantidad  = document.getElementById('imp-cantidad')?.value||state.imp.cantidad;
-    state.imp.material  = document.getElementById('imp-material')?.value||state.imp.material;
-    state.imp.materialOtro = document.getElementById('imp-material-otro')?.value||state.imp.materialOtro;
-    state.imp.tipo      = document.getElementById('imp-tipo')?.value||state.imp.tipo;
-    state.imp.imprenta  = document.getElementById('imp-imprenta')?.value||state.imp.imprenta;
-    state.imp.imprentaOtra = document.getElementById('imp-imprenta-otra')?.value||state.imp.imprentaOtra;
-    state.imp.extras    = document.getElementById('imp-extras')?.value||state.imp.extras;
-    state.imp.extrasOn  = document.getElementById('extras-si')?.checked||state.imp.extrasOn;
-  };
-  document.getElementById('imp-generar-btn')?.addEventListener('click',()=>{
-    impSync();
-    // Guardar estado del formulario
-    DB.set('kv_imp_state', state.imp);
-    // Guardar en historial si está completa
-    const imp=state.imp;
-    const troq=TROQUELES[imp.producto]||null;
-    const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
-    if(imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta){
-      const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
-      const extras=imp.extrasOn?(parseInt(imp.extras)||0):0;
-      const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
-      const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
-      const orden={
-        id:'imp_'+uid(), cliente:imp.cliente, producto:imp.producto,
-        cantidad:cant, material:matLabel, tipo:imp.tipo,
-        hojas:hojaBase+extras, imprenta:impLabel,
-        extras:extras, created_by:state.user.id, created_at:now()
-      };
-      sbUpsert('kv_imprenta',[orden]);
-      state.imp_orders=[orden,...state.imp_orders];
-      notify('success','Orden guardada en el historial');
-    }
-    render();
-    setTimeout(()=>document.getElementById('orden-preview')?.scrollIntoView({behavior:'smooth'}),100);
-  });
-  ['imp-producto','imp-material','imp-imprenta','imp-tipo'].forEach(id=>{
-    document.getElementById(id)?.addEventListener('change',()=>{ impSync(); render(); });
-  });
-  ['extras-si','extras-no'].forEach(id=>{
-    document.getElementById(id)?.addEventListener('change',()=>{
-      state.imp.extrasOn=document.getElementById('extras-si')?.checked||false;
-      impSync(); render();
-    });
-  });
-  document.getElementById('imp-print-btn')?.addEventListener('click',()=>{
-    const el=document.getElementById('orden-preview');
-    if(!el) return;
-    const w=window.open('','_blank');
-    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-      <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Inter:wght@400;600&display=swap" rel="stylesheet">
-      <style>*{box-sizing:border-box;margin:0;padding:0} body{font-family:'Inter',sans-serif;padding:30px;background:#fff} @media print{body{padding:10px}}</style>
-      </head><body>${el.outerHTML}<${'script'}>window.onload=()=>window.print()</${'script'}></body></html>`);
-    w.document.close();
-  });
-  document.getElementById('imp-wa-btn')?.addEventListener('click',()=>{
-    const imp=state.imp;
-    const troq=TROQUELES[imp.producto]||null;
-    const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
-    const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
-    const extras=imp.extrasOn?(parseInt(imp.extras)||0):0;
-    const hojaTotal=hojaBase+extras;
-    const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
-    const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
-    const msg=`Cliente: ${imp.cliente.toUpperCase()}
-Producto: ${imp.producto}
-Cantidad: ${cant.toLocaleString()} uds
-Material: ${matLabel}
-Tipo: ${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}
-Hojas a enviar: ${hojaTotal.toLocaleString()}
-Imprenta: ${impLabel.toUpperCase()}`;
-    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
-  });
-  document.getElementById('imp-reset-btn')?.addEventListener('click',()=>{
-    state.imp={cliente:'',producto:'',cantidad:'',material:'',materialOtro:'',tipo:'nueva',extrasOn:false,extras:0,imprenta:'',imprentaOtra:''};
-    DB.set('kv_imp_state', state.imp);
-    render();
-  });
-
-  /* CANCELAR ORDEN IMPRENTA */
-  document.querySelectorAll('[data-imp-cancel]').forEach(el=>{
-    el.addEventListener('click',()=>{
-      const id=el.dataset.impCancel;
-      if(!confirm('¿Cancelar esta orden de imprenta?')) return;
-      fetch(`${SB_URL}/rest/v1/kv_imprenta?id=eq.${encodeURIComponent(id)}`,{
-        method:'PATCH',
-        headers:{...SB_H,'Prefer':'return=minimal'},
-        body:JSON.stringify({estado:'cancelada'})
-      }).catch(()=>{});
-      state.imp_orders=state.imp_orders.map(o=>o.id===id?{...o,estado:'cancelada'}:o);
-      notify('success','Orden cancelada');
-      render();
-    });
-  });
-
-  /* MARCAR ORDEN IMPRENTA COMO ENVIADA */
-  document.querySelectorAll('[data-imp-send]').forEach(el=>{
-    el.addEventListener('click',()=>{
-      const id=el.dataset.impSend;
-      const orden=state.imp_orders.find(o=>o.id===id);
-      if(!orden) return;
-      // Actualizar estado en Supabase
-      fetch(`${SB_URL}/rest/v1/kv_imprenta?id=eq.${encodeURIComponent(id)}`,{
-        method:'PATCH',
-        headers:{...SB_H,'Prefer':'return=minimal'},
-        body:JSON.stringify({estado:'enviada'})
-      }).catch(()=>{});
-      // Actualizar en estado local
-      state.imp_orders=state.imp_orders.map(o=>o.id===id?{...o,estado:'enviada'}:o);
-      // Crear orden de producción automáticamente
-      const maquina=MACHINES.find(m=>m.products.includes(orden.producto))||MACHINES[4];
-      const np={
-        id:'prod_'+uid(), machine_id:maquina.id, product:orden.producto,
-        tipo:'personalizado', marca:orden.cliente,
-        status:'pendiente', shift:'mañana',
-        target_qty:orden.cantidad||0, produced_qty:0, unit_price:0,
-        observations:`Orden de imprenta — Material: ${orden.material} · Imprenta: ${orden.imprenta}`,
-        damages:[], mold_changes:[], start_time:null, end_time:null,
-        created_by:state.user.id, created_at:now(),
-        audit_log:[{action:`Creado desde orden de imprenta · Cliente: ${orden.cliente}`,by:state.user.id,by_name:state.user.name,at:now(),changes:{}}]
-      };
-      state.productions.push(np);
-      DB.set('kv_productions',state.productions);
-      notify('success',`✓ Enviada — Orden de producción de "${orden.producto}" creada automáticamente`);
-      render();
-    });
-  });
-
-  document.getElementById('exp-btn')?.addEventListener('click',()=>{
-    const data=JSON.stringify({users:state.users,productions:state.productions});
-    navigator.clipboard.writeText(data).then(()=>{
-      document.getElementById('exp-ok').style.display='block';
-      notify('success','Datos copiados al portapapeles');
-    }).catch(()=>{
-      const ta=document.createElement('textarea');
-      ta.value=data; document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      document.getElementById('exp-ok').style.display='block';
-      notify('success','Datos copiados al portapapeles');
-    });
-  });
-  document.getElementById('imp-btn')?.addEventListener('click',()=>{
-    const txt=document.getElementById('imp-text').value.trim();
-    const err=document.getElementById('imp-err');
-    try{
-      const d=JSON.parse(txt);
-      if(!d.users||!d.productions){ err.textContent='Formato inválido — falta users o productions'; return; }
-      state.users=d.users; state.productions=d.productions;
-      DB.set('kv_users',state.users); DB.set('kv_productions',state.productions);
-      notify('success',`Importado: ${d.users.length} usuarios, ${d.productions.length} producciones`);
-      state.page='dashboard'; render();
-    }catch(e){ err.textContent='JSON inválido — verifica que copiaste el texto completo'; }
-  });
-
-  /* TROQUEL FILTERS */
-  document.getElementById('tf-q')?.addEventListener('input',e=>{state.troquelFilters.q=e.target.value;render();});
-  document.getElementById('tf-stat')?.addEventListener('change',e=>{state.troquelFilters.status=e.target.value;render();});
-
-  /* OPEN TROQUEL DETAIL */
-  document.querySelectorAll('[data-open-troquel]').forEach(el=>{
-    el.addEventListener('click',()=>{
-      const id=el.dataset.openTroquel;
-      if(!id)return;
-      state.selectedTroquelId=id;state.page='troquel-detail';state.tab='info';render();
-    });
-  });
-
-  /* NEW TROQUEL FORM */
-  document.getElementById('nt-tipo')?.addEventListener('change',function(){
-    const w=document.getElementById('nt-marca-wrap');if(w)w.style.display=this.value==='personalizado'?'block':'none';
-  });
-  document.getElementById('nt-material')?.addEventListener('change',function(){
-    const w=document.getElementById('nt-material-otro-wrap');if(w)w.style.display=this.value==='Otro'?'block':'none';
-  });
-  document.getElementById('nt-save')?.addEventListener('click',()=>{
-    const client=document.getElementById('nt-client').value.trim();
-    const product=document.getElementById('nt-product').value;
-    const qty=parseInt(document.getElementById('nt-qty').value)||0;
-    const material=document.getElementById('nt-material').value;
-    const materialOtro=document.getElementById('nt-material-otro')?.value.trim()||'';
-    const tipo=document.getElementById('nt-tipo').value;
-    const marca=document.getElementById('nt-marca')?.value.trim()||'';
-    const troqueladorId=document.getElementById('nt-troquelador').value;
-    const fechaVal=document.getElementById('nt-fecha').value;
-    const err=document.getElementById('nt-err');
-    if(!client){err.textContent='Indica el cliente';return;}
-    if(!product){err.textContent='Selecciona el producto';return;}
-    if(!qty){err.textContent='Indica la cantidad de papel';return;}
-    if(!material){err.textContent='Selecciona el material';return;}
-    if(material==='Otro'&&!materialOtro){err.textContent='Especifica el material';return;}
-    if(tipo==='personalizado'&&!marca){err.textContent='Indica el nombre de la marca';return;}
-    if(!troqueladorId){err.textContent='Selecciona el troquelador responsable';return;}
-    if(!fechaVal){err.textContent='Indica la fecha de la orden';return;}
-    const tUser=state.users.find(u=>u.id===troqueladorId);
-    const nt={
-      id:'troq_'+uid(),client,product,qty,
-      material,material_otro:material==='Otro'?materialOtro:'',
-      tipo,marca:tipo==='personalizado'?marca:'',
-      status:'pendiente',
-      troquelador_id:troqueladorId,
-      troquelador_name:tUser?tUser.name:troqueladorId,
-      observations:document.getElementById('nt-obs').value,
-      created_by:state.user.id,created_at:new Date(fechaVal+'T12:00:00').toISOString(),
-      audit_log:[{action:'Orden de troquelado creada',by:state.user.id,by_name:state.user.name,at:now(),changes:{},note:''}]
-    };
-    state.troquelOrders.push(nt);
-    sbUpsert('kv_troquel',[nt]);
-    notify('success','Orden de troquelado creada');
-    state.page='troquel';render();
-  });
-
-  /* TROQUEL DETAIL SAVE */
-  document.getElementById('tdet-save')?.addEventListener('click',()=>{
-    const t=state.troquelOrders.find(x=>x.id===state.selectedTroquelId);
-    if(!t)return;
-    const newStatus=document.getElementById('tdet-status').value;
-    const newObs=document.getElementById('tdet-obs').value;
-    const changes={};
-    if(newStatus!==t.status)changes.status={old:t.status,new:newStatus};
-    const updated={...t,status:newStatus,observations:newObs,
-      audit_log:[...(t.audit_log||[]),{action:'Actualización de orden',by:state.user.id,by_name:state.user.name,at:now(),changes,note:''}]};
-    state.troquelOrders=state.troquelOrders.map(x=>x.id===state.selectedTroquelId?updated:x);
-    sbUpsert('kv_troquel',[updated]);
-    if(['completada','cancelada'].includes(newStatus)){
-      notify('success','Orden finalizada — movida al historial');
-      state.page='troquel';render();
-    } else {
-      notify('success','Guardado correctamente');
-      render();
-    }
-  });
-}
-
-/* ══════════════════════════════════════
-   ORDEN DE IMPRENTA
-══════════════════════════════════════ */
-function renderImprenta(){
-  const imp=state.imp;
-  const troq=TROQUELES[imp.producto]||null;
-  const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
-  const hojaBase=troq&&cant>0?Math.ceil(cant/troq.units):0;
-  const extras=imp.extrasOn?(parseInt(imp.extras)||0):0;
-  const hojaTotal=hojaBase+extras;
-  const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
-  const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
-  const hasOrden=imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta;
-
-  // Vista de solo lectura para productores y operadores
-  if(state.user.role!=='admin'){
-    return `
-    <div class="ph">
-      <div class="ph-title">🖨 Orden de Imprenta</div>
-      <div class="ph-sub">Vista de la orden actual</div>
-    </div>
-    <div class="content">
-      ${hasOrden?`
-      <div style="background:#fff;border:2px solid #0f1923;border-radius:12px;padding:24px;max-width:480px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #0f1923">
-          <div style="font-family:var(--rajd);font-size:20px;font-weight:700;letter-spacing:2px;color:#00923d">◈ KREAVERDE</div>
-          <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#7a8fa8;text-align:right">ORDEN DE IMPRENTA<br><span style="color:#0f1923;font-size:12px">${new Date().toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'})}</span></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cliente</span>
-            <span style="font-size:16px;font-weight:700;color:#0f1923">${escHTML(imp.cliente.toUpperCase())}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Producto</span>
-            <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(imp.producto)}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cantidad</span>
-            <span style="font-size:15px;font-weight:700;color:#0f1923">${cant.toLocaleString()} uds</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Material</span>
-            <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(matLabel)}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Tipo</span>
-            <span style="font-size:15px;font-weight:700;color:${imp.tipo==='nueva'?'#00923d':'#1a5fd4'}">${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:2px solid #0f1923">
-            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Hojas a enviar</span>
-            <span style="font-size:28px;font-weight:700;font-family:var(--mono);color:#0f1923">${hojaTotal.toLocaleString()}</span>
-          </div>
-          ${troq?.note?`<div style="font-size:11px;color:#7a8fa8;font-style:italic;padding:4px 0">Nota troquel: ${escHTML(troq.note)}</div>`:''}
-          ${extras>0?`<div style="font-size:11px;color:#1a5fd4;padding:4px 0">Base: ${hojaBase.toLocaleString()} + ${extras.toLocaleString()} hojas extra</div>`:''}
-          <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0">
-            <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Imprenta</span>
-            <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(impLabel.toUpperCase())}</span>
-          </div>
-        </div>
-      </div>`
-      :`<div class="empty" style="padding:60px 20px">
-        <div style="font-size:40px;margin-bottom:12px">🖨</div>
-        <div style="font-size:14px;color:var(--txt2)">No hay orden de imprenta activa</div>
-        <div style="font-size:12px;color:var(--txt3);margin-top:6px">El administrador debe crear una orden</div>
-      </div>`}
-      ${state.imp_orders.length?`
-      <div style="margin-top:28px">
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:14px">Historial de Órdenes</div>
-        <div class="card" style="padding:0;overflow:hidden">
-          <div class="tw"><table>
-            <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th></tr></thead>
-            <tbody>${state.imp_orders.map(o=>`<tr>
-              <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
-              <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
-              <td>${escHTML(o.producto)}</td>
-              <td class="mono">${(o.cantidad||0).toLocaleString()}</td>
-              <td style="font-size:11px">${escHTML(o.material)}</td>
-              <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
-              <td class="mono" style="font-weight:700;color:#0f1923">${(o.hojas||0).toLocaleString()}</td>
-              <td style="font-size:11px">${escHTML(o.imprenta)}</td>
-            </tr>`).join('')}
-            </tbody>
-          </table></div>
-        </div>
-      </div>`:''}
-    </div>`;
-  }
-
-  const preview=imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta?`
-  <div style="margin-top:24px">
-    <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">Vista previa de la orden</div>
-    <div id="orden-preview" style="background:#fff;border:2px solid #0f1923;border-radius:10px;padding:24px;max-width:480px;font-family:var(--sans)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #0f1923">
-        <div style="font-family:var(--rajd);font-size:20px;font-weight:700;letter-spacing:2px;color:#00923d">◈ KREAVERDE</div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:#7a8fa8;text-align:right">ORDEN DE IMPRENTA<br><span style="color:#0f1923;font-size:12px">${new Date().toLocaleDateString('es-EC',{day:'2-digit',month:'2-digit',year:'numeric'})}</span></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cliente</span>
-          <span style="font-size:16px;font-weight:700;color:#0f1923">${escHTML(imp.cliente.toUpperCase())}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Producto</span>
-          <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(imp.producto)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Cantidad</span>
-          <span style="font-size:15px;font-weight:700;color:#0f1923">${cant.toLocaleString()} uds</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Material</span>
-          <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(matLabel)}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0;border-bottom:1px solid #edf0f5">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Tipo</span>
-          <span style="font-size:15px;font-weight:700;color:${imp.tipo==='nueva'?'#00923d':'#1a5fd4'}">${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:2px solid #0f1923">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Hojas a enviar</span>
-          <span style="font-size:24px;font-weight:700;font-family:var(--mono);color:#0f1923">${hojaTotal.toLocaleString()}</span>
-        </div>
-        ${troq?.note?`<div style="font-size:11px;color:#7a8fa8;font-style:italic;padding:4px 0">Nota troquel: ${escHTML(troq.note)}</div>`:''}
-        ${extras>0?`<div style="font-size:11px;color:#1a5fd4;padding:4px 0">Base: ${hojaBase.toLocaleString()} + ${extras.toLocaleString()} hojas extra</div>`:''}
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:8px 0">
-          <span style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:#7a8fa8;text-transform:uppercase">Imprenta</span>
-          <span style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(impLabel.toUpperCase())}</span>
-        </div>
-      </div>
-      <div style="margin-top:18px;padding-top:14px;border-top:1px solid #edf0f5;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:10px;color:#b0bfce">Generado por ${escHTML(state.user.name)}</span>
-        <span style="font-size:10px;color:#b0bfce">KreaVerde — Sistema de Producción</span>
-      </div>
-    </div>
-    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="btn btn-primary" id="imp-print-btn">🖨 Imprimir / PDF</button>
-      <button class="btn" id="imp-wa-btn" style="background:#25d366;color:#fff;font-family:var(--rajd);font-size:14px;font-weight:700;padding:10px 18px;border-radius:6px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Enviar por WhatsApp
-      </button>
-      <button class="btn btn-secondary" id="imp-reset-btn">Nueva Orden</button>
-    </div>
-  </div>`:'';
-
-  const calcInfo=troq&&cant>0?`
-  <div style="background:#e8f5ee;border:1px solid #b7e5cc;border-radius:8px;padding:12px 16px;display:flex;align-items:center;gap:12px">
-    <div style="font-size:26px;font-weight:700;font-family:var(--mono);color:#00923d">${hojaBase.toLocaleString()}</div>
-    <div>
-      <div style="font-size:13px;font-weight:700;color:#00923d">hojas base calculadas</div>
-      <div style="font-size:11px;color:#4a9065">${cant.toLocaleString()} uds ÷ ${troq.units} uds/hoja${troq.note?' · '+troq.note:''}</div>
-    </div>
-  </div>`:'';
-
-  return `
-  <div class="ph">
-    <div class="ph-title">🖨 Orden de Imprenta</div>
-    <div class="ph-sub">Genera órdenes para enviar a la imprenta</div>
-  </div>
-  <div class="content">
-    <div style="max-width:560px">
-      <div class="card fg">
-        <div class="st">Datos de la Orden</div>
-        <div class="field">
-          <label>Cliente *</label>
-          <input id="imp-cliente" placeholder="Nombre del cliente" value="${escHTML(imp.cliente)}"/>
-        </div>
-        <div class="fr">
-          <div class="field">
-            <label>Producto *</label>
-            <select id="imp-producto">
-              <option value="">Seleccionar producto</option>
-              ${PRODUCTOS_IMPRENTA.map(p=>`<option value="${escHTML(p)}"${imp.producto===p?' selected':''}>${escHTML(p)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field">
-            <label>Cantidad *</label>
-            <input id="imp-cantidad" placeholder="ej: 10000" value="${escHTML(imp.cantidad)}"/>
-          </div>
-        </div>
-
-        ${calcInfo}
-
-        <div class="fr">
-          <div class="field">
-            <label>Material *</label>
-            <select id="imp-material">
-              <option value="">Seleccionar material</option>
-              ${MATERIALES.map(m=>`<option value="${escHTML(m)}"${imp.material===m?' selected':''}>${escHTML(m)}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field">
-            <label>Tipo *</label>
-            <select id="imp-tipo">
-              <option value="nueva"${imp.tipo==='nueva'?' selected':''}>Nueva</option>
-              <option value="reimpresion"${imp.tipo==='reimpresion'?' selected':''}>Reimpresión</option>
-            </select>
-          </div>
-        </div>
-
-        ${imp.material==='Otro'?`<div class="field"><label>Especificar material</label><input id="imp-material-otro" placeholder="Describe el material" value="${escHTML(imp.materialOtro)}"/></div>`:''}
-
-        <div class="field">
-          <label>¿Desea enviar hojas extra?</label>
-          <div style="display:flex;gap:12px;margin-top:4px">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:normal;letter-spacing:0;text-transform:none;color:var(--txt)">
-              <input type="radio" name="extras-r" id="extras-no" ${!imp.extrasOn?'checked':''} style="width:auto"/> No
-            </label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:normal;letter-spacing:0;text-transform:none;color:var(--txt)">
-              <input type="radio" name="extras-r" id="extras-si" ${imp.extrasOn?'checked':''} style="width:auto"/> Sí
-            </label>
-          </div>
-        </div>
-
-        ${imp.extrasOn?`<div class="field"><label>¿Cuántas hojas extra?</label><input id="imp-extras" type="number" placeholder="0" value="${imp.extras}"/></div>`:''}
-
-        <div class="field">
-          <label>Imprenta *</label>
-          <select id="imp-imprenta">
-            <option value="">Seleccionar imprenta</option>
-            ${IMPRENTAS.map(i=>`<option value="${escHTML(i)}"${imp.imprenta===i?' selected':''}>${escHTML(i)}</option>`).join('')}
-          </select>
-        </div>
-
-        ${imp.imprenta==='Otra'?`<div class="field"><label>Nombre de la imprenta</label><input id="imp-imprenta-otra" placeholder="Nombre de la imprenta" value="${escHTML(imp.imprentaOtra)}"/></div>`:''}
-
-        <button class="btn btn-primary" id="imp-generar-btn" style="margin-top:6px">Generar Orden</button>
-      </div>
-
-      ${preview}
-    </div>
-  </div>
-  ${state.imp_orders.length?`
-  <div class="content" style="margin-top:0;padding-top:0">
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:14px">Historial de Órdenes Generadas</div>
-    <div class="card" style="padding:0;overflow:hidden;max-width:900px">
-      <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Cantidad</th><th>Material</th><th>Tipo</th><th>Hojas</th><th>Imprenta</th></tr></thead>
-        <tbody>${state.imp_orders.map(o=>`<tr>
-          <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
-          <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}</td>
-          <td>${escHTML(o.producto)}</td>
-          <td class="mono">${(o.cantidad||0).toLocaleString()}</td>
-          <td style="font-size:11px">${escHTML(o.material)}</td>
-          <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span></td>
-          <td class="mono" style="font-weight:700;color:#0f1923">${(o.hojas||0).toLocaleString()}</td>
-          <td style="font-size:11px">${escHTML(o.imprenta)}</td>
-        </tr>`).join('')}
-        </tbody>
-      </table></div>
-    </div>
-  </div>`:''}`;
-}
-function renderAdminDashboard(){
-  const activeStatuses=['en_proceso','cambio_molde','pausada','pendiente'];
-  const active=state.productions.filter(p=>activeStatuses.includes(p.status))
-    .sort((a,b)=>{
-      const rank=s=>s==='en_proceso'?0:s==='cambio_molde'?1:s==='pausada'?2:3;
-      return rank(a.status)-rank(b.status)||new Date(a.created_at)-new Date(b.created_at);
-    });
-  const completed=state.productions.filter(p=>p.status==='completada').slice(-5).reverse();
-  const imp=state.imp;
-  const troq=TROQUELES[imp.producto]||null;
-  const cant=parseInt((imp.cantidad||'').replace(/\D/g,''))||0;
-  const hojaTotal=troq&&cant>0?Math.ceil(cant/troq.units)+(imp.extrasOn?(parseInt(imp.extras)||0):0):0;
-  const hasImpOrden=imp.cliente&&imp.producto&&cant>0&&imp.material&&imp.imprenta;
-  const matLabel=imp.material==='Otro'?imp.materialOtro:imp.material;
-  const impLabel=imp.imprenta==='Otra'?imp.imprentaOtra:imp.imprenta;
-  const stColor=s=>STATUS[s]?.color||'#64748b';
-  const stLabel=s=>STATUS[s]?.label||s;
-  const stIcon=s=>s==='en_proceso'?'▶':s==='cambio_molde'?'🔧':s==='pausada'?'⏸':'⏳';
-
-  const prodRows=active.length?active.map(p=>{
-    const m=MACHINES.find(x=>x.id===p.machine_id);
-    const perc=pct(p.produced_qty||0,p.target_qty||1);
-    return `<div style="background:#fff;border-radius:12px;border:2px solid ${stColor(p.status)}33;padding:14px 16px;cursor:pointer;margin-bottom:10px" data-open-prod="${p.id}">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px">
-        <div>
-          <div style="font-size:15px;font-weight:700;color:#0f1923">${escHTML(p.product)}</div>
-          <div style="font-size:11px;color:#7a8fa8;margin-top:2px">${escHTML(m?.name||p.machine_id)} · Turno ${escHTML(p.shift)}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <span style="padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;color:${stColor(p.status)};background:${stColor(p.status)}18">${stIcon(p.status)} ${escHTML(stLabel(p.status))}</span>
-          <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:#0f1923;margin-top:4px">${(p.produced_qty||0).toLocaleString()} <span style="font-size:11px;color:#92a6bf">/ ${(p.target_qty||0).toLocaleString()}</span></div>
-        </div>
-      </div>
-      <div style="height:6px;background:#edf0f5;border-radius:3px;overflow:hidden">
-        <div style="width:${perc}%;height:100%;background:${m?.color||'#00923d'};border-radius:3px"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px">
-        <span style="font-size:11px;color:${m?.color||'#00923d'};font-weight:700">${perc}%</span>
-        ${p.damages?.length?`<span style="font-size:11px;color:#cc1f1f">⚠ ${p.damages.length} daño${p.damages.length>1?'s':''}</span>`:''}
-        ${p.tipo==='personalizado'?`<span style="font-size:11px;color:#b86e00;font-weight:700">${escHTML(p.marca)}</span>`:''}
-      </div>
-    </div>`;
-  }).join(''):`<div class="empty">Sin órdenes activas</div>`;
-
-  const impCard=hasImpOrden?`
-  <div class="card" style="margin-bottom:20px">
-    <div class="st" style="margin-bottom:14px">🖨 Última Orden de Imprenta</div>
-    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Cliente</span><strong>${escHTML(imp.cliente.toUpperCase())}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Producto</span><strong>${escHTML(imp.producto)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Cantidad</span><strong>${cant.toLocaleString()} uds</strong></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Material</span><strong>${escHTML(matLabel)}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Tipo</span><strong style="color:${imp.tipo==='nueva'?'#00923d':'#1a5fd4'}">${imp.tipo==='nueva'?'NUEVA':'REIMPRESIÓN'}</strong></div>
-      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:2px solid #0f1923"><span style="color:var(--txt2)">Hojas a enviar</span><strong style="font-family:var(--mono);font-size:20px">${hojaTotal.toLocaleString()}</strong></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--txt2)">Imprenta</span><strong>${escHTML(impLabel.toUpperCase())}</strong></div>
-    </div>
-    <button class="btn btn-sm btn-primary" style="margin-top:14px;width:100%;justify-content:center" data-page="imprenta">Ver / Editar orden →</button>
-  </div>`:`<div class="card" style="margin-bottom:20px;text-align:center;padding:24px">
-    <div style="font-size:13px;color:var(--txt2);margin-bottom:12px">Sin orden de imprenta activa</div>
-    <button class="btn btn-primary btn-sm" data-page="imprenta">+ Nueva Orden Imprenta</button>
-  </div>`;
-
-  return `
-  <div class="ph">
-    <div class="ph-title">★ Panel Administrador</div>
-    <div class="ph-sub">Vista rápida de todas las operaciones activas</div>
-  </div>
-  <div class="content">
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px">
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
-        <div style="font-family:var(--mono);font-size:26px;color:#00923d">${active.filter(p=>p.status==='en_proceso').length}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">En Proceso</div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
-        <div style="font-family:var(--mono);font-size:26px;color:#64748b">${active.filter(p=>p.status==='pendiente').length}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Pendientes</div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
-        <div style="font-family:var(--mono);font-size:26px;color:#2979ff">${completed.length}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Completadas</div>
-      </div>
-      <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:15px">
-        <div style="font-family:var(--mono);font-size:26px;color:#cc1f1f">${state.productions.reduce((s,p)=>s+(p.damages?.length||0),0)}</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-family:var(--rajd)">Daños</div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-      <div>
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:12px;font-family:var(--rajd)">☰ Producción Activa (${active.length})</div>
-        ${prodRows}
-        ${active.length?`<button class="btn btn-secondary btn-sm" data-page="productions" style="width:100%;justify-content:center;margin-top:4px">Ver historial →</button>`:''}
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:12px;font-family:var(--rajd)">🖨 Imprenta</div>
-        ${impCard}
-        ${completed.length?`
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;margin-bottom:12px;margin-top:8px;font-family:var(--rajd)">✓ Últimas Completadas</div>
-        ${completed.map(p=>`<div style="padding:10px 14px;background:#fff;border-radius:8px;border:1px solid var(--border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-          <div><div style="font-size:13px;font-weight:600">${escHTML(p.product)}</div><div style="font-size:11px;color:#7a8fa8">${escHTML(machName(p.machine_id))}</div></div>
-          <div style="text-align:right"><div style="font-family:var(--mono);font-size:14px;color:#2979ff">${(p.produced_qty||0).toLocaleString()}</div><div style="font-size:10px;color:#92a6bf">uds</div></div>
-        </div>`).join('')}`:''}
-      </div>
-    </div>
-  </div>`;
-}
-
-/* ══════════════════════════════════════
-   TROQUELADORA — UTILS
-══════════════════════════════════════ */
-const troquelBadge=s=>{const st=TROQUEL_STATUS[s]||{label:s,color:'#64748b'};return `<span class="badge" style="color:${st.color};background:${st.color}1a">${escHTML(st.label)}</span>`;};
-
-/* TROQUELADORA — LISTA */
-function renderTroquelList(){
-  const {status:fStat,q}=state.troquelFilters;
-  const list=state.troquelOrders.filter(t=>{
-    if(fStat&&t.status!==fStat)return false;
-    if(q&&!(t.client||'').toLowerCase().includes(q.toLowerCase())&&!(t.product||'').toLowerCase().includes(q.toLowerCase()))return false;
-    return true;
-  }).slice().reverse();
-  const rows=list.length?list.map(t=>`
-    <tr class="clickable" data-open-troquel="${t.id}">
-      <td style="font-weight:700">${escHTML(t.client||'—')}</td>
-      <td>${escHTML(t.product||'—')}</td>
-      <td>${troquelBadge(t.status)}</td>
-      <td style="font-size:12px;color:#9c27b0;font-weight:600">${escHTML(t.troquelador_name||'—')}</td>
-      <td class="mono">${(t.qty||0).toLocaleString()}</td>
-      <td style="font-size:11px;color:var(--txt2)">${escHTML(t.material||'—')}${t.material==='Otro'&&t.material_otro?' · '+escHTML(t.material_otro):''}</td>
-      <td>${t.tipo==='personalizado'?`<span style="color:var(--amber);font-size:11px;font-weight:700">PERS · ${escHTML(t.marca||'')}</span>`:'<span style="color:var(--txt3);font-size:11px">Blanco</span>'}</td>
-      <td style="font-size:10px;color:var(--txt3)">${fmt(t.created_at)}</td>
-    </tr>`).join(''):`<tr><td colspan="8"><div class="empty">Sin órdenes que coincidan</div></td></tr>`;
-  return `
-  <div class="ph">
-    <div class="row" style="flex-wrap:nowrap">
-      <div style="flex:1">
-        <div class="ph-title">✂ Troqueladora</div>
-        <div class="ph-sub">Órdenes de troquelado — ${state.troquelOrders.length} registro${state.troquelOrders.length!==1?'s':''}</div>
-      </div>
-      ${state.user.role!=='operator'?`<button class="btn btn-primary" data-page="new-troquel">+ Nueva Orden</button>`:''}
-    </div>
-  </div>
-  <div class="content">
-    <div class="fb">
-      <input id="tf-q" placeholder="Buscar cliente o producto..." value="${escHTML(q)}" style="min-width:160px"/>
-      <select id="tf-stat">
-        <option value="">Todos los estados</option>
-        ${Object.entries(TROQUEL_STATUS).map(([k,v])=>`<option value="${k}"${fStat===k?' selected':''}>${escHTML(v.label)}</option>`).join('')}
-      </select>
-      <span class="txt3" style="font-size:11px;margin-left:auto">${list.length} resultado${list.length!==1?'s':''}</span>
-    </div>
-    <div class="card" style="padding:0;overflow:hidden">
-      <div class="tw"><table>
-        <thead><tr><th>Cliente</th><th>Producto</th><th>Estado</th><th>Troquelador</th><th>Cant. Papel</th><th>Material</th><th>Tipo</th><th>Fecha</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table></div>
-    </div>
-  </div>`;
-}
-
-/* TROQUELADORA — NUEVA ORDEN */
-function renderNewTroquel(){
-  const operadores=nonAdminUsers();
-  return `
-  <div class="ph">
-    <div class="ph-title">✂ Nueva Orden de Troquelado</div>
-    <div class="ph-sub">Registrar nueva orden de troqueladora</div>
-  </div>
-  <div class="content"><div class="card" style="max-width:680px"><div class="fg">
-    <div class="fr">
-      <div class="field"><label>Cliente *</label><input id="nt-client" placeholder="Nombre del cliente"/></div>
-      <div class="field"><label>Producto *</label>
-        <select id="nt-product">
-          <option value="">Seleccionar producto</option>
-          ${MACHINES.find(m=>m.id==='troqueladora').products.map(p=>`<option value="${escHTML(p)}">${escHTML(p)}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="fr">
-      <div class="field"><label>Cantidad de Papel Troquelado *</label><input id="nt-qty" type="number" placeholder="ej: 1000"/></div>
-      <div class="field"><label>Material *</label>
-        <select id="nt-material">
-          <option value="">Seleccionar material</option>
-          ${TROQUEL_MATERIALS.map(m=>`<option value="${escHTML(m)}">${escHTML(m)}</option>`).join('')}
-        </select>
-      </div>
-    </div>
-    <div class="field" id="nt-material-otro-wrap" style="display:none">
-      <label>Especificar Material *</label>
-      <input id="nt-material-otro" placeholder="Describe el material..."/>
-    </div>
-    <div class="fr">
-      <div class="field"><label>Tipo *</label>
-        <select id="nt-tipo"><option value="blanco">Blanco</option><option value="personalizado">Personalizado</option></select>
-      </div>
-      <div class="field" id="nt-marca-wrap" style="display:none">
-        <label>Nombre de Marca *</label>
-        <input id="nt-marca" placeholder="ej: Mykonos, Zanzíbar..."/>
-      </div>
-    </div>
-    <div class="fr">
-      <div class="field"><label>Troquelador Responsable *</label>
-        <select id="nt-troquelador">
-          <option value="">Seleccionar persona</option>
-          ${operadores.length?operadores.map(u=>`<option value="${u.id}">${escHTML(u.name)}</option>`).join(''):'<option value="" disabled>No hay operadores/productores registrados</option>'}
-        </select>
-      </div>
-      <div class="field"><label>Fecha de la Orden *</label>
-        <input id="nt-fecha" type="date" value="${new Date().toISOString().slice(0,10)}"/>
-      </div>
-    </div>
-    <div class="field"><label>Observaciones</label>
-      <textarea id="nt-obs" placeholder="Instrucciones especiales, notas del pedido..."></textarea>
-    </div>
-    <div id="nt-err" class="err"></div>
-    <div class="row">
-      <button class="btn" id="nt-save" style="background:#9c27b0;color:#fff;font-family:var(--rajd);font-weight:700">✓ Crear Orden</button>
-      <button class="btn btn-secondary" data-page="troquel">Cancelar</button>
-    </div>
-  </div></div></div>`;
-}
-
-/* TROQUELADORA — DETALLE */
-function renderTroquelDetail(){
-  const t=state.troquelOrders.find(x=>x.id===state.selectedTroquelId);
-  if(!t) return `<div class="content"><div class="empty">Orden no encontrada</div></div>`;
-  const canEdit=['admin','producer','operator'].includes(state.user.role);
-  const tab=state.tab||'info';
-  const st=TROQUEL_STATUS[t.status]||{label:t.status,color:'#64748b'};
-  const logs=[...(t.audit_log||[])].reverse();
-  const tabInfo=tab==='info'?`
-    <div class="info-grid">
-      <div class="card fg">
-        <div class="st">Actualizar Orden</div>
-        <div class="field"><label>Estado</label>
-          <select id="tdet-status"${!canEdit?' disabled':''}>
-            ${Object.entries(TROQUEL_STATUS).map(([k,v])=>`<option value="${k}"${t.status===k?' selected':''}>${escHTML(v.label)}</option>`).join('')}
-          </select>
-        </div>
-        <div class="field"><label>Observaciones</label>
-          <textarea id="tdet-obs"${!canEdit?' disabled':''}>${escHTML(t.observations||'')}</textarea>
-        </div>
-        ${canEdit?`<button class="btn" id="tdet-save" style="background:#9c27b0;color:#fff;font-family:var(--rajd);font-weight:700">Guardar Cambios</button>`:''}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div class="card">
-          <div class="st">Detalle de la Orden</div>
-          <div style="display:flex;flex-direction:column;gap:12px;font-size:13px">
-            <div class="row"><span class="txt2">Cliente:</span><div class="sp"></div><strong>${escHTML(t.client)}</strong></div>
-            <div class="row"><span class="txt2">Producto:</span><div class="sp"></div><span>${escHTML(t.product)}</span></div>
-            <div class="row"><span class="txt2">Cant. papel:</span><div class="sp"></div><span class="mono" style="color:#9c27b0;font-size:20px;font-weight:700">${(t.qty||0).toLocaleString()}</span></div>
-            <div class="row"><span class="txt2">Material:</span><div class="sp"></div><span>${escHTML(t.material)}${t.material==='Otro'&&t.material_otro?' · <em>'+escHTML(t.material_otro)+'</em>':''}</span></div>
-            <div class="row"><span class="txt2">Tipo:</span><div class="sp"></div>${t.tipo==='personalizado'?`<span style="color:var(--amber);font-weight:700">PERSONALIZADO · ${escHTML(t.marca||'')}</span>`:`<span style="color:var(--txt2)">BLANCO</span>`}</div>
-            <div class="row"><span class="txt2">Troquelador:</span><div class="sp"></div><span style="color:#9c27b0;font-weight:600">${escHTML(t.troquelador_name||'—')}</span></div>
-            <div class="row"><span class="txt2">Fecha:</span><div class="sp"></div><span class="mono" style="font-size:12px">${fmt(t.created_at)}</span></div>
-          </div>
-        </div>
-        ${t.observations?`<div class="card"><div class="st">Observaciones</div><p style="font-size:13px;color:var(--txt2);line-height:1.6">${escHTML(t.observations)}</p></div>`:''}
-      </div>
-    </div>`:'';
-  const tabAudit=tab==='audit'?`
-    <div>
-      <div class="st" style="margin-bottom:16px">Registro de Cambios</div>
-      ${logs.length===0?`<div class="empty">Sin registros</div>`:
-      logs.map(e=>`<div class="audit-e">
-        <div class="row"><span class="audit-who">${escHTML(e.by_name||uname(e.by))}</span><div class="sp"></div><span class="audit-time">${fmt(e.at)}</span></div>
-        <div class="audit-act">${escHTML(e.action)}</div>
-        ${Object.keys(e.changes||{}).length>0?`<div style="margin-top:5px;font-size:11px;color:var(--txt3);display:flex;gap:14px;flex-wrap:wrap">${Object.entries(e.changes).map(([k,v])=>`<span>${escHTML(k)}: <span style="color:var(--red);text-decoration:line-through">${escHTML(String(v.old))}</span> → <span style="color:var(--green)">${escHTML(String(v.new))}</span></span>`).join('')}</div>`:''}
-      </div>`).join('')}
-    </div>`:'';
-  return `
-  <div class="ph">
-    <div class="row" style="flex-wrap:nowrap;gap:10px;align-items:flex-start">
-      <button class="btn btn-secondary btn-sm" data-page="troquel" style="flex-shrink:0;padding:6px 10px">← Volver</button>
-      <div style="flex:1;min-width:0">
-        <div class="ph-title" style="font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">✂ ${escHTML(t.client)} — ${escHTML(t.product)}</div>
-        <div class="ph-sub" style="font-size:10px">Material: ${escHTML(t.material)}${t.material==='Otro'&&t.material_otro?' · '+escHTML(t.material_otro):''} · Troquelador: ${escHTML(t.troquelador_name||'—')}</div>
-      </div>
-      <span class="badge" style="color:${st.color};background:${st.color}1a;flex-shrink:0">● ${escHTML(st.label)}</span>
-    </div>
-  </div>
-  <div class="content">
-    <div class="tabs">
-      <div class="tab${tab==='info'?' active':''}" data-tab="info">Información</div>
-      ${state.user.role==='admin'?`<div class="tab${tab==='audit'?' active':''}" data-tab="audit">Auditoría (${t.audit_log?.length||0})</div>`:''}
-    </div>
-    ${tabInfo}${tabAudit}
-  </div>`;
-}
-
-/* ══════════════════════════════════════
-   ÓRDENES IMPRENTA — HISTORIAL COMPLETO
-══════════════════════════════════════ */
-function renderImpOrdenes(){
-  const todas=state.imp_orders.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
-  const pendientes=todas.filter(o=>o.estado!=='enviada'&&o.estado!=='cancelada');
-  const enviadas=todas.filter(o=>o.estado==='enviada');
-  const canceladas=todas.filter(o=>o.estado==='cancelada');
-
-  const filaOrdenes=(lista,mostrarAccion)=>lista.length?lista.map(o=>`<tr>
-    <td style="font-size:10px;color:var(--txt3)">${fmt(o.created_at)}</td>
-    <td style="font-weight:700">${escHTML(o.cliente.toUpperCase())}<br><span style="font-size:10px;color:#7a8fa8;font-weight:400">${escHTML(o.producto)} · ${escHTML(o.material)} · ${escHTML(o.imprenta)}</span></td>
-    <td><span style="font-size:11px;font-weight:700;color:${o.tipo==='nueva'?'#00923d':'#1a5fd4'}">${o.tipo==='nueva'?'NUEVA':'REIMP.'}</span> ${(o.cantidad||0).toLocaleString()} uds</td>
-    <td class="mono" style="font-weight:700;font-size:16px">${(o.hojas||0).toLocaleString()}</td>
-    <td><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:4px;background:${o.estado==='enviada'?'#e8f5ee':o.estado==='cancelada'?'#fdeaea':'#fff3cd'};color:${o.estado==='enviada'?'#00923d':o.estado==='cancelada'?'#cc1f1f':'#b86e00'}">${o.estado==='enviada'?'✓ Enviada':o.estado==='cancelada'?'✗ Cancelada':'⏳ Pendiente'}</span></td>
-    ${mostrarAccion?`<td>${o.estado==='pendiente'||!o.estado?`
-      <div class="row">
-        <button class="btn btn-sm btn-approve" data-imp-send="${o.id}">✓ Enviada</button>
-        <button class="btn btn-sm btn-danger" data-imp-cancel="${o.id}">✗ Cancelar</button>
-      </div>`:'—'}</td>`:''}
-  </tr>`).join(''):`<tr><td colspan="6"><div class="empty">Sin órdenes</div></td></tr>`;
-
-  const canAct=state.user.role==='admin'||state.user.role==='producer';
-
-  return `
-  <div class="ph">
-    <div class="row" style="flex-wrap:nowrap">
-      <div style="flex:1">
-        <div class="ph-title">📋 Órdenes de Imprenta</div>
-        <div class="ph-sub">Historial completo — ${todas.length} orden${todas.length!==1?'es':''} · ${pendientes.length} pendiente${pendientes.length!==1?'s':''} · ${enviadas.length} enviada${enviadas.length!==1?'s':''}</div>
-      </div>
-      ${state.user.role==='admin'?`<button class="btn btn-primary" data-page="imprenta">+ Nueva Orden</button>`:''}
-    </div>
-  </div>
-  <div class="content">
-    ${pendientes.length?`
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--amber);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">⏳ Pendientes (${pendientes.length})</div>
-    <div class="card" style="padding:0;overflow:hidden;margin-bottom:28px">
-      <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th>${canAct?'<th>Acción</th>':''}</tr></thead>
-        <tbody>${filaOrdenes(pendientes,canAct)}</tbody>
-      </table></div>
-    </div>`:''}
-
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">✓ Enviadas (${enviadas.length})</div>
-    <div class="card" style="padding:0;overflow:hidden;margin-bottom:28px">
-      <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th></tr></thead>
-        <tbody>${filaOrdenes(enviadas,false)}</tbody>
-      </table></div>
-    </div>
-
-    ${canceladas.length?`
-    <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:var(--red);text-transform:uppercase;font-family:var(--rajd);margin-bottom:12px">✗ Canceladas (${canceladas.length})</div>
-    <div class="card" style="padding:0;overflow:hidden">
-      <div class="tw"><table>
-        <thead><tr><th>Fecha</th><th>Cliente</th><th>Producto</th><th>Hojas</th><th>Estado</th></tr></thead>
-        <tbody>${filaOrdenes(canceladas,false)}</tbody>
-      </table></div>
-    </div>`:''}
-  </div>`;
 }
 
 /* ══════════════════════════════════════
    INIT
 ══════════════════════════════════════ */
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded',loadData);
-}else{
-  loadData();
-}
-
+loadData();
+render();
 </script>
 </body>
 </html>
